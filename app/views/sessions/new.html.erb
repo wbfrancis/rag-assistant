@@ -1,0 +1,16 @@
+<% content_for :title, "Sign in" %>
+<h1>Sign in</h1>
+
+<%= form_with url: session_path, method: :post do |f| %>
+  <p>
+    <%= f.label :email_address, "Email" %><br>
+    <%= f.email_field :email_address, autofocus: true, autocomplete: "username" %>
+  </p>
+  <p>
+    <%= f.label :password %><br>
+    <%= f.password_field :password, autocomplete: "current-password" %>
+  </p>
+  <p><%= f.submit "Sign in" %></p>
+<% end %>
+
+<p>No account? <%= link_to "Sign up", new_registration_path %></p>

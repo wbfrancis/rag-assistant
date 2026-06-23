@@ -1,0 +1,27 @@
+<% content_for :title, "Documents" %>
+<h1>Documents</h1>
+
+<p><%= link_to "New document", new_document_path %></p>
+
+<% if @documents.empty? %>
+  <p>No documents yet. <%= link_to "Add one", new_document_path %>.</p>
+<% else %>
+  <table cellpadding="6" style="border-collapse: collapse;">
+    <thead>
+      <tr style="text-align: left; border-bottom: 1px solid #ccc;">
+        <th>Title</th><th>Type</th><th>Status</th><th>Chunks</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @documents.each do |doc| %>
+        <tr style="border-bottom: 1px solid #eee;">
+          <td><%= link_to doc.title, doc %></td>
+          <td><%= doc.content_type %></td>
+          <td><%= doc.status %></td>
+          <td><%= doc.chunks.count %></td>
+          <td><%= button_to "Delete", doc, method: :delete, form: { style: "display:inline;" } %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

@@ -24,6 +24,23 @@
   </head>
 
   <body>
-    <%= yield %>
+    <header style="padding: 0.5rem 1rem; border-bottom: 1px solid #ddd; display: flex; gap: 1rem; align-items: center;">
+      <%= link_to "Documents", root_path %>
+      <span style="margin-left: auto;">
+        <% if current_user %>
+          <%= current_user.email_address %>
+          <%= button_to "Sign out", session_path, method: :delete, form: { style: "display:inline;" } %>
+        <% else %>
+          <%= link_to "Sign in", new_session_path %>
+        <% end %>
+      </span>
+    </header>
+
+    <% if notice %><p style="color: green; padding: 0 1rem;"><%= notice %></p><% end %>
+    <% if alert %><p style="color: #b00; padding: 0 1rem;"><%= alert %></p><% end %>
+
+    <main style="padding: 1rem;">
+      <%= yield %>
+    </main>
   </body>
 </html>

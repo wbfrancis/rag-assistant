@@ -1,0 +1,27 @@
+<% content_for :title, "New document" %>
+<h1>New document</h1>
+
+<%= form_with model: @document, local: true, html: { multipart: true } do |f| %>
+  <% if @document.errors.any? %>
+    <ul style="color: #b00;">
+      <% @document.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+    </ul>
+  <% end %>
+
+  <p>
+    <%= f.label :title %><br>
+    <%= f.text_field :title %>
+  </p>
+
+  <fieldset>
+    <legend>Option A — upload a file (.txt, .md, .html)</legend>
+    <%= file_field_tag "document[file]" %>
+  </fieldset>
+
+  <fieldset style="margin-top: 1rem;">
+    <legend>Option B — paste text (Markdown)</legend>
+    <%= text_area_tag "document[body]", nil, rows: 12, cols: 80 %>
+  </fieldset>
+
+  <p><%= f.submit "Upload & ingest" %></p>
+<% end %>
