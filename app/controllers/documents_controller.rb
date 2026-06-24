@@ -36,14 +36,15 @@ class DocumentsController < ApplicationController
     file = params.dig(:document, :file)
 
     if file.present?
-      raw = file.read.to_s.dup.force_encoding("UTF-8")
-      Current.user.documents.new(
+      document = Current.user.documents.new(
         title: params[:document][:title].presence || file.original_filename,
         source_uri: file.original_filename,
         content_type: detected_content_type(file),
-        raw_text: raw,
         status: :pending
       )
+      # Store the upload in Active Storage; the job extracts text from it later.
+      document.file.attach(file)
+      document
     else
       Current.user.documents.new(
         title: params[:document][:title].presence || "Pasted document",
@@ -57,6 +58,7 @@ class DocumentsController < ApplicationController
 
   def detected_content_type(file)
     case File.extname(file.original_filename.to_s).downcase
+    when ".pdf" then "application/pdf"
     when ".md", ".markdown" then "text/markdown"
     when ".html", ".htm" then "text/html"
     else "text/plain"

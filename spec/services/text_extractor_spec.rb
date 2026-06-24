@@ -29,4 +29,16 @@ RSpec.describe TextExtractor do
     expect { TextExtractor.call(content_type: "application/zip", data: "anything") }
       .to raise_error(TextExtractor::UnsupportedContentTypeError)
   end
+
+  it "extracts text from a PDF's page content" do
+    data = File.binread(Rails.root.join("spec/fixtures/files/sample.pdf"))
+    text = TextExtractor.call(content_type: "application/pdf", data: data)
+
+    expect(text).to include("Hello PDF world")
+  end
+
+  it "raises a permanent error on a malformed PDF" do
+    expect { TextExtractor.call(content_type: "application/pdf", data: "%PDF-1.4 not really a pdf") }
+      .to raise_error(TextExtractor::Error)
+  end
 end

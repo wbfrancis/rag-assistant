@@ -14,8 +14,8 @@
   </p>
 
   <fieldset>
-    <legend>Option A — upload a file (.txt, .md, .html)</legend>
-    <%= file_field_tag "document[file]" %>
+    <legend>Option A — upload a file (.txt, .md, .html, .pdf)</legend>
+    <%= file_field_tag "document[file]", accept: ".txt,.md,.markdown,.html,.htm,.pdf" %>
   </fieldset>
 
   <fieldset style="margin-top: 1rem;">

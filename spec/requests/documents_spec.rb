@@ -37,6 +37,22 @@ RSpec.describe "Documents", type: :request do
       expect(document.raw_text).to eq("Some body text.")
       expect(response).to redirect_to(document)
     end
+
+    it "attaches an uploaded PDF to Active Storage instead of raw_text" do
+      user = create(:user)
+      sign_in(user)
+      upload = fixture_file_upload(Rails.root.join("spec/fixtures/files/sample.pdf"), "application/pdf")
+
+      expect {
+        post documents_path, params: { document: { title: "Report", file: upload } }
+      }.to change { user.documents.count }.by(1)
+        .and have_enqueued_job(IngestDocumentJob)
+
+      document = user.documents.order(:created_at).last
+      expect(document.content_type).to eq("application/pdf")
+      expect(document.file).to be_attached
+      expect(document.raw_text).to be_nil
+    end
   end
 
   describe "tenant isolation" do
