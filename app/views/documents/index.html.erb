@@ -1,7 +1,7 @@
 <% content_for :title, "Documents" %>
 <h1>Documents</h1>
 
-<p><%= link_to "New document", new_document_path %></p>
+<p><%= link_to "New document", new_document_path %> · <%= link_to "Search", search_path %></p>
 
 <% if @documents.empty? %>
   <p>No documents yet. <%= link_to "Add one", new_document_path %>.</p>
