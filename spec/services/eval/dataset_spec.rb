@@ -57,4 +57,14 @@ RSpec.describe Eval::Dataset do
   it "raises when a fixture file is missing" do
     expect { described_class.load(dir: Dir.mktmpdir) }.to raise_error(Eval::Dataset::InvalidError, /Missing fixture/)
   end
+
+  # Guards the real shipped fixtures offline: every expected_marker must be a
+  # verbatim substring of the corpus, so a fixture typo fails here instead of
+  # silently scoring a recall miss on a (costly) real-key run.
+  it "validates the shipped spec/fixtures/eval dataset" do
+    dataset = described_class.load(dir: Rails.root.join("spec/fixtures/eval"))
+
+    expect(dataset.questions).not_to be_empty
+    expect(dataset.questions.count(&:out_of_corpus?)).to be >= 1
+  end
 end

@@ -45,7 +45,7 @@ class Chunker
     @encoder ||= Tiktoken.get_encoding(ENCODING)
   end
 
-  def count(text)
+  def count_tokens(text)
     encoder.encode(text).length
   end
 
@@ -55,11 +55,11 @@ class Chunker
   def atomize(text)
     paragraphs(text).flat_map do |para|
       heading = para.match?(HEADING)
-      if count(para) <= @max_tokens
+      if count_tokens(para) <= @max_tokens
         [ atom(para, heading) ]
       else
         sentences(para).flat_map do |sentence|
-          if count(sentence) <= @max_tokens
+          if count_tokens(sentence) <= @max_tokens
             [ atom(sentence, false) ]
           else
             hard_split(sentence).map { |piece| atom(piece, false) }
@@ -85,7 +85,7 @@ class Chunker
   end
 
   def atom(text, heading)
-    { text: text, tokens: count(text), heading: heading }
+    { text: text, tokens: count_tokens(text), heading: heading }
   end
 
   # Greedily combine atoms into chunks (arrays of atoms), starting a new chunk
@@ -125,7 +125,7 @@ class Chunker
       {
         content: content,
         position: index,
-        token_count: count(content),
+        token_count: count_tokens(content),
         content_hash: Digest::SHA256.hexdigest(content),
         metadata: {}
       }
@@ -140,7 +140,7 @@ class Chunker
     taken  = []
     tokens = 0
     sentences(previous_body).reverse_each do |sentence|
-      t = count(sentence)
+      t = count_tokens(sentence)
       break if tokens + t > budget && !taken.empty?
 
       taken.unshift(sentence)
