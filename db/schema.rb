@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_24_030415) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_24_120002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -63,6 +63,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_030415) do
     t.index ["tenant_id"], name: "index_chunks_on_tenant_id"
   end
 
+  create_table "conversations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "tenant_id", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["tenant_id"], name: "index_conversations_on_tenant_id"
+  end
+
   create_table "documents", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "content_hash"
     t.string "content_type", null: false
@@ -77,6 +85,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_030415) do
     t.datetime "updated_at", null: false
     t.index ["content_hash"], name: "index_documents_on_content_hash"
     t.index ["tenant_id"], name: "index_documents_on_tenant_id"
+  end
+
+  create_table "messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "chunk_ids", default: [], null: false, array: true
+    t.jsonb "citations", default: [], null: false
+    t.integer "completion_tokens"
+    t.text "content", default: "", null: false
+    t.uuid "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "latency_ms"
+    t.string "model"
+    t.integer "prompt_tokens"
+    t.jsonb "retrieval_scores"
+    t.integer "role", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -212,7 +236,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_030415) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "chunks", "documents"
   add_foreign_key "chunks", "users", column: "tenant_id"
+  add_foreign_key "conversations", "users", column: "tenant_id"
   add_foreign_key "documents", "users", column: "tenant_id"
+  add_foreign_key "messages", "conversations"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

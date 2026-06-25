@@ -1,0 +1,5 @@
+<%# Immediately echo the user's question and an empty assistant bubble into the %>
+<%# list. GenerateAnswerJob then streams tokens into the assistant bubble over %>
+<%# the conversation's Turbo Stream and replaces it with the final answer. %>
+<%= turbo_stream.append "messages", partial: "messages/message", locals: { message: @user_message } %>
+<%= turbo_stream.append "messages", partial: "messages/message", locals: { message: @assistant } %>

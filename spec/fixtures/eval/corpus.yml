@@ -1,0 +1,15 @@
+# Eval fixture corpus: a small, self-contained knowledge base about a fictional
+# product ("Helios") so questions have unambiguous answers. Each body is short
+# (one paragraph) and contains the facts the questions in questions.yml probe;
+# the expected_markers there are verbatim substrings of these bodies.
+- title: "Helios Overview"
+  body: "Helios is a cloud platform for monitoring residential solar installations. It ingests panel telemetry from each site every 30 seconds and displays live output on a dashboard."
+
+- title: "Data Retention"
+  body: "Helios retention depends on your plan. The free tier retains telemetry data for 90 days, after which it is permanently deleted. Paid tiers retain telemetry data for 5 years."
+
+- title: "Alerting"
+  body: "Helios sends a low-output alert when a panel's measured output drops below 70 percent of its expected output for more than 15 minutes. Alerts are delivered by email and push notification."
+
+- title: "REST API"
+  body: "The Helios REST API is rate limited to 100 requests per minute per account. Requests beyond that limit receive an HTTP 429 response and should be retried with exponential backoff."

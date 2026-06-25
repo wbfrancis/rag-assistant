@@ -1,0 +1,41 @@
+# Eval cases against corpus.yml. Answerable questions are natural language (so a
+# real-key run measures *semantic* retrieval); each names its gold source by
+# expected_markers — verbatim substrings the correct chunk must contain (matched
+# on content, not chunk id; see ADR 0005). Out-of-corpus questions must abstain.
+#
+# Note: under the offline FakeLlmClient (CI/default), embeddings only match on
+# verbatim text, so these natural-language questions will *not* retrieve — that
+# run measures plumbing, not semantics (ADR 0005, decision 3). The deterministic
+# Runner spec builds its own verbatim fixtures to exercise the scoring path.
+- id: telemetry-interval
+  question: "How often does Helios collect telemetry from a site?"
+  expected_markers:
+    - "every 30 seconds"
+  reference_answer: "Helios ingests panel telemetry every 30 seconds."
+
+- id: free-tier-retention
+  question: "How long does the free tier keep my telemetry data?"
+  expected_markers:
+    - "90 days"
+  reference_answer: "The free tier retains telemetry data for 90 days."
+
+- id: low-output-alert
+  question: "When does Helios send a low-output alert?"
+  expected_markers:
+    - "below 70 percent"
+    - "15 minutes"
+  reference_answer: "When a panel's output drops below 70 percent of expected for more than 15 minutes."
+
+- id: api-rate-limit
+  question: "What is the rate limit on the Helios API?"
+  expected_markers:
+    - "100 requests per minute"
+  reference_answer: "100 requests per minute per account."
+
+- id: out-of-corpus-capital
+  question: "What is the capital of France?"
+  out_of_corpus: true
+
+- id: out-of-corpus-recipe
+  question: "How do I bake a sourdough loaf?"
+  out_of_corpus: true

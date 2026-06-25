@@ -1,0 +1,23 @@
+<% content_for :title, @conversation.title.presence || "Conversation" %>
+
+<p><%= link_to "← All conversations", conversations_path %></p>
+
+<%# Subscribe to this conversation's Turbo Stream: the GenerateAnswerJob %>
+<%# broadcasts streamed tokens and the final message here over WebSockets. %>
+<%= turbo_stream_from @conversation %>
+
+<div data-controller="chat">
+  <div id="messages" data-chat-target="list"
+       style="border: 1px solid #eee; padding: 0.5rem; min-height: 12rem; max-height: 28rem; overflow-y: auto;">
+    <%= render @messages %>
+  </div>
+
+  <%= form_with model: [ @conversation, @message ],
+                data: { action: "turbo:submit-end->chat#reset" },
+                style: "margin-top: 0.75rem;" do |f| %>
+    <%= f.text_area :content, placeholder: "Ask a question about your documents…",
+                    rows: 3, style: "width: 100%; box-sizing: border-box;",
+                    data: { chat_target: "input" } %>
+    <%= f.submit "Send" %>
+  <% end %>
+</div>
