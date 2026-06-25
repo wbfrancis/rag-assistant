@@ -1,23 +1,39 @@
-# Eval cases against corpus.yml. Answerable questions are natural language (so a
-# real-key run measures *semantic* retrieval); each names its gold source by
-# expected_markers — verbatim substrings the correct chunk must contain (matched
-# on content, not chunk id; see ADR 0005). Out-of-corpus questions must abstain.
+# Eval cases against corpus.yml. Answerable questions are natural language so a
+# real-key run measures *semantic* retrieval; each names its gold source by
+# expected_markers (verbatim substrings of the correct chunk; matched on content,
+# not chunk id — ADR 0005). Several have a topical distractor in the corpus so
+# MRR can drop below 1.0 when ranking degrades.
 #
-# Note: under the offline FakeLlmClient (CI/default), embeddings only match on
-# verbatim text, so these natural-language questions will *not* retrieve — that
-# run measures plumbing, not semantics (ADR 0005, decision 3). The deterministic
-# Runner spec builds its own verbatim fixtures to exercise the scoring path.
+# The out-of-corpus cases are mostly *near-misses*: on-topic Helios questions the
+# corpus does not actually answer. These pressure the relevance floor — if it is
+# too low, a tangential chunk clears it and the system answers (fabricates)
+# instead of abstaining, dropping abstention accuracy. That is the meaningful
+# failure this set can now surface.
+
+# --- Retrieval discrimination (distractor present) -------------------------
 - id: telemetry-interval
-  question: "How often does Helios collect telemetry from a site?"
+  question: "How often does each site send panel telemetry to Helios?"
   expected_markers:
     - "every 30 seconds"
-  reference_answer: "Helios ingests panel telemetry every 30 seconds."
+  reference_answer: "Every 30 seconds."
+
+- id: battery-interval
+  question: "How often does a battery report its state of charge?"
+  expected_markers:
+    - "every 5 minutes"
+  reference_answer: "Every 5 minutes."
 
 - id: free-tier-retention
-  question: "How long does the free tier keep my telemetry data?"
+  question: "How long does the free tier keep telemetry data?"
   expected_markers:
     - "90 days"
-  reference_answer: "The free tier retains telemetry data for 90 days."
+  reference_answer: "90 days."
+
+- id: paid-tier-retention
+  question: "How long do paid tiers retain telemetry data?"
+  expected_markers:
+    - "5 years"
+  reference_answer: "5 years."
 
 - id: low-output-alert
   question: "When does Helios send a low-output alert?"
@@ -27,15 +43,26 @@
   reference_answer: "When a panel's output drops below 70 percent of expected for more than 15 minutes."
 
 - id: api-rate-limit
-  question: "What is the rate limit on the Helios API?"
+  question: "What is the rate limit on the Helios REST API?"
   expected_markers:
     - "100 requests per minute"
   reference_answer: "100 requests per minute per account."
 
-- id: out-of-corpus-capital
-  question: "What is the capital of France?"
+- id: webhook-retries
+  question: "How many times does Helios retry a failed webhook?"
+  expected_markers:
+    - "5 times"
+  reference_answer: "Up to 5 times."
+
+# --- Abstention: near-miss (on-topic, unanswerable) + one obvious control ---
+- id: oc-powerwall
+  question: "Does Helios integrate with the Tesla Powerwall?"
   out_of_corpus: true
 
-- id: out-of-corpus-recipe
-  question: "How do I bake a sourdough loaf?"
+- id: oc-uptime-sla
+  question: "What uptime SLA does Helios guarantee?"
+  out_of_corpus: true
+
+- id: oc-capital-france
+  question: "What is the capital of France?"
   out_of_corpus: true

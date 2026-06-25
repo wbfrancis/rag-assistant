@@ -1,15 +1,46 @@
-# Eval fixture corpus: a small, self-contained knowledge base about a fictional
-# product ("Helios") so questions have unambiguous answers. Each body is short
-# (one paragraph) and contains the facts the questions in questions.yml probe;
-# the expected_markers there are verbatim substrings of these bodies.
+# Eval fixture corpus: a small knowledge base about a fictional product ("Helios",
+# residential solar monitoring). It deliberately contains *distractors* — passages
+# that share vocabulary or numeric shape with the gold answers — so retrieval has
+# to discriminate, not just find the only doc on a topic. expected_markers in
+# questions.yml are verbatim substrings of these bodies.
 - title: "Helios Overview"
-  body: "Helios is a cloud platform for monitoring residential solar installations. It ingests panel telemetry from each site every 30 seconds and displays live output on a dashboard."
+  body: "Helios is a cloud platform for monitoring residential solar installations. Each site's gateway streams panel telemetry to Helios every 30 seconds, and the dashboard shows live and historical output for every panel."
 
+# Distractor for the telemetry-interval question: a *different* interval ("every 5
+# minutes") for a *different* signal (battery), so the retriever must not confuse
+# "how often is telemetry sent" with "how often is battery charge reported".
+- title: "Battery Storage Monitoring"
+  body: "Helios also monitors home battery storage units. Unlike panel telemetry, a battery reports its state of charge every 5 minutes, along with its charge and discharge rates."
+
+# Two retention numbers in one doc: answering "free tier" vs "paid tier" requires
+# picking the right clause, not just landing on the retention passage.
 - title: "Data Retention"
-  body: "Helios retention depends on your plan. The free tier retains telemetry data for 90 days, after which it is permanently deleted. Paid tiers retain telemetry data for 5 years."
+  body: "Telemetry retention depends on your Helios plan. The free tier retains telemetry data for 90 days, after which it is permanently deleted. Paid tiers retain telemetry data for 5 years."
 
 - title: "Alerting"
-  body: "Helios sends a low-output alert when a panel's measured output drops below 70 percent of its expected output for more than 15 minutes. Alerts are delivered by email and push notification."
+  body: "Helios sends a low-output alert when a panel's measured output drops below 70 percent of its expected output for more than 15 minutes. Alerts are delivered by email and mobile push notification."
 
 - title: "REST API"
   body: "The Helios REST API is rate limited to 100 requests per minute per account. Requests beyond that limit receive an HTTP 429 response and should be retried with exponential backoff."
+
+# Distractor for the API question: also about "retry" and a count limit, and also
+# an integration surface, so it competes with the rate-limit passage.
+- title: "Webhooks"
+  body: "Helios can push events to your server via webhooks. A failed webhook delivery is retried up to 5 times with increasing delays before Helios gives up and logs the failure."
+
+# Distractor numbers (dollars/site counts) to compete with the retention/limit Qs.
+- title: "Pricing"
+  body: "Helios offers a free tier and two paid plans. The Pro plan costs 49 dollars per month per site, and the Business plan is priced on request for fleets of more than 50 sites."
+
+# Distractor for the alerting question: also mentions push notifications and panels
+# underperforming, without stating the alert threshold.
+- title: "Mobile App"
+  body: "The Helios mobile app is available for iOS and Android. It mirrors the web dashboard and lets you acknowledge alerts and receive push notifications when a panel underperforms."
+
+- title: "Firmware Updates"
+  body: "Gateway firmware updates are downloaded and applied automatically during a nightly maintenance window. A gateway that misses three consecutive updates is flagged for manual review."
+
+# Distractor for near-miss abstention questions about security/SLA: on-topic
+# infrastructure vocabulary, but says nothing about uptime guarantees.
+- title: "Security"
+  body: "All telemetry is encrypted in transit using TLS 1.3 and encrypted at rest. Each account's data is isolated from every other account's data."
