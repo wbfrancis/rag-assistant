@@ -1,0 +1,39 @@
+# Fly.io deployment config for the RAG Assistant web app.
+# Full step-by-step runbook (Postgres + pgvector, secrets, first deploy) lives in
+# docs/DEPLOY.md. Change `app` to your own unique Fly app name before deploying.
+
+app = "rag-assistant"
+primary_region = "iad"
+
+[build]
+  # Uses the repository Dockerfile (the standard Rails 8 production image).
+
+[env]
+  RAILS_ENV = "production"
+  # Run the Solid Queue worker *inside* Puma: one process serves both web
+  # requests and background jobs (IngestDocumentJob / GenerateAnswerJob). That is
+  # all a single-node portfolio deploy needs — no separate worker machine.
+  SOLID_QUEUE_IN_PUMA = "true"
+  WEB_CONCURRENCY = "1"
+
+[deploy]
+  # Run migrations once per deploy in a throwaway machine. db:prepare also enables
+  # the pgvector extension (the enable_vector migration) and prepares the
+  # cache / queue / cable databases. Requires the DB secrets to be set first.
+  release_command = "bin/rails db:prepare"
+
+[http_service]
+  internal_port = 80          # Thruster listens on :80 inside the container
+  force_https = true
+  # Scale to zero when idle to keep a portfolio deploy ~free. Note: with the
+  # worker running in Puma, a sleeping machine also pauses jobs — fine for a demo
+  # (a request wakes the machine, which then drains its queue). Set
+  # min_machines_running = 1 if you want jobs to run while no one is visiting.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

@@ -56,7 +56,9 @@ class AnswerGenerator
     prompt   = prompt_messages(selected)
     answer   = LlmClient.stream_chat(prompt, &block)
 
-    persist(selected: selected, answer: answer, prompt: prompt, latency_ms: elapsed_ms(started))
+    generation_ms = elapsed_ms(started)
+    persist(selected: selected, answer: answer, prompt: prompt, latency_ms: generation_ms)
+    RetrievalLogger.log_generation(message: @message, chunk_count: selected.length, generation_ms: generation_ms)
     answer
   end
 

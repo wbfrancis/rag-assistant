@@ -54,6 +54,31 @@
     - "5 times"
   reference_answer: "Up to 5 times."
 
+# --- Lexically-hard: a rare identifier buried in a long section --------------
+# Each question hinges on one identifier (E-7700, SB-3300, HX-9400) that lives
+# once inside a long ops-manual chunk. Dense dilutes the long chunk and ranks a
+# shorter on-topic decoy first; the hybrid lexical leg matches the exact lexeme
+# and recovers the buried record. Markers are the identifiers themselves (unique
+# to the gold chunk), so MRR drops precisely when a decoy wins. This subset is
+# where the hybrid recall/MRR lift shows (ADR 0007, README table).
+- id: diag-e7700
+  question: "What condition does diagnostic reference E-7700 indicate?"
+  expected_markers:
+    - "E-7700"
+  reference_answer: "It is written when a battery pack crosses its safe operating envelope, halting charging (a thermal/over-envelope cutoff)."
+
+- id: bulletin-sb3300
+  question: "What change does service bulletin SB-3300 document?"
+  expected_markers:
+    - "SB-3300"
+  reference_answer: "A revised webhook retry schedule and a stricter clock-drift tolerance on gateway authentication."
+
+- id: part-hx9400
+  question: "Which gateway model carries part number HX-9400?"
+  expected_markers:
+    - "HX-9400"
+  reference_answer: "The largest, highest-capacity gateway, specified for installations spanning two arrays."
+
 # --- Abstention: near-miss (on-topic, unanswerable) + one obvious control ---
 - id: oc-powerwall
   question: "Does Helios integrate with the Tesla Powerwall?"

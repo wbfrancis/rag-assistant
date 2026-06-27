@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
 require "digest"
+require "json"
 
 # Deterministic, offline backend for LlmClient used throughout the test suite.
 #
 # - +embed+ returns reproducible vectors derived from a digest of each input, so
 #   the same text always yields the same vector (stable retrieval tests).
-# - +stream_chat+ yields a canned sequence of tokens and returns their join.
+# - +stream_chat+ yields a canned sequence of tokens and returns their join —
+#   except for a +Reranker+ prompt (detected by its marker), where it echoes the
+#   candidate order (an identity reorder) so the deterministic suite stays green
+#   while still exercising the parse/apply path (ADR 0008).
 # - Failure injection (+fail_times+ / +failing_models+) exercises the retry,
 #   backoff and fallback paths without any network.
 class FakeLlmClient
@@ -44,14 +48,30 @@ class FakeLlmClient
     Array(texts).map { |text| deterministic_vector(text) }
   end
 
-  def stream_chat(_messages, model: nil)
+  def stream_chat(messages, model: nil)
     register_call(model)
     @chat_calls += 1
-    @chat_tokens.each { |token| yield token if block_given? }
-    @chat_tokens.join
+    tokens = rerank_request?(messages) ? [ rerank_response(messages) ] : @chat_tokens
+    tokens.each { |token| yield token if block_given? }
+    tokens.join
   end
 
   private
+
+  # A Reranker prompt? It announces itself with a stable marker in the system
+  # message so the Fake can answer in the expected JSON shape regardless of the
+  # canned +chat_tokens+ a spec set for ordinary answer generation.
+  def rerank_request?(messages)
+    Array(messages).any? { |m| m[:content].to_s.include?(Reranker::RERANK_MARKER) }
+  end
+
+  # Echo the candidate indices in their given order: a deterministic identity
+  # reorder. The candidate lines look like "[0] ...", "[1] ...".
+  def rerank_response(messages)
+    user    = Array(messages).reverse.find { |m| m[:role] == "user" }
+    indices = user[:content].to_s.lines.filter_map { |line| line[/\A\[(\d+)\]/, 1]&.to_i }
+    JSON.generate(indices)
+  end
 
   def register_call(model)
     @calls += 1

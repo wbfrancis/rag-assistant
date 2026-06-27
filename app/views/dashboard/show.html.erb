@@ -1,0 +1,54 @@
+<% content_for :title, "Usage" %>
+<h1>Usage &amp; cost</h1>
+
+<p>
+  <%= link_to "Documents", root_path %> ·
+  <%= link_to "Chat", conversations_path %> ·
+  <%= link_to "Search", search_path %>
+</p>
+
+<p style="color:#666;">Token usage and derived cost for your account. Cost is computed from
+per-message token counts using current per-model prices (see <code>LlmPricing</code>).</p>
+
+<div style="display:flex; gap:1rem; flex-wrap:wrap; margin:1rem 0;">
+  <% summary = {
+       "Conversations" => @conversation_count,
+       "Answers" => @message_count,
+       "Prompt tokens" => number_with_delimiter(@prompt_tokens),
+       "Completion tokens" => number_with_delimiter(@completion_tokens),
+       "Mean latency" => (@mean_latency_ms ? "#{number_with_delimiter(@mean_latency_ms)} ms" : "—"),
+       "Est. cost" => "$#{format('%.4f', @total_cost)}"
+     } %>
+  <% summary.each do |label, value| %>
+    <div style="border:1px solid #ddd; border-radius:6px; padding:0.75rem 1rem; min-width:8rem;">
+      <div style="font-size:0.8rem; color:#666;"><%= label %></div>
+      <div style="font-size:1.4rem; font-weight:600;"><%= value %></div>
+    </div>
+  <% end %>
+</div>
+
+<h2>Recent answers</h2>
+<% if @recent.empty? %>
+  <p>No answered questions yet. <%= link_to "Start a chat", conversations_path %>.</p>
+<% else %>
+  <table cellpadding="6" style="border-collapse: collapse; width:100%;">
+    <thead>
+      <tr style="text-align:left; border-bottom:1px solid #ccc;">
+        <th>When</th><th>Model</th><th>Prompt</th><th>Completion</th><th>Latency</th><th>Cost</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @recent.each do |message| %>
+        <tr style="border-bottom:1px solid #eee;">
+          <td><%= message.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+          <td><%= message.model || "—" %></td>
+          <td><%= number_with_delimiter(message.prompt_tokens) %></td>
+          <td><%= number_with_delimiter(message.completion_tokens) %></td>
+          <td><%= message.latency_ms ? "#{number_with_delimiter(message.latency_ms)} ms" : "—" %></td>
+          <td><%= message.cost ? "$#{format('%.5f', message.cost)}" : "—" %></td>
+          <td><%= link_to "View", conversation_path(message.conversation_id) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

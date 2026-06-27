@@ -26,6 +26,7 @@
   <body>
     <header style="padding: 0.5rem 1rem; border-bottom: 1px solid #ddd; display: flex; gap: 1rem; align-items: center;">
       <%= link_to "Documents", root_path %>
+      <% if current_user %><%= link_to "Usage", dashboard_path %><% end %>
       <span style="margin-left: auto;">
         <% if current_user %>
           <%= current_user.email_address %>

@@ -11,12 +11,15 @@ module Eval
   # rollback works whether or not an outer transaction is present (e.g. RSpec's
   # transactional fixtures), which a plain nested transaction would not.
   class Runner
-    def initialize(dataset:, k: 8, min_similarity: Retriever::RELEVANCE_FLOOR, judge: false, samples: 1)
+    def initialize(dataset:, k: 8, min_similarity: Retriever::RELEVANCE_FLOOR, judge: false, samples: 1,
+                   hybrid: true, rerank: false)
       @dataset = dataset
       @k = k
       @min_similarity = min_similarity
       @judge = judge
       @samples = samples
+      @hybrid = hybrid
+      @rerank = rerank
     end
 
     def call
@@ -28,13 +31,24 @@ module Eval
         raise ActiveRecord::Rollback
       end
 
-      Report.new(rows: rows, k: @k, min_similarity: @min_similarity, backend: backend_name, judged: @judge)
+      Report.new(rows: rows, k: @k, min_similarity: @min_similarity, backend: backend_name, judged: @judge,
+                 hybrid: @hybrid, rerank: @rerank)
     end
 
     private
 
+    # Retrieve the question, then optionally re-rank. The three head-to-head
+    # configurations the README table reports are exactly: dense (hybrid off),
+    # hybrid (default), and hybrid+rerank. When re-ranking we retrieve the wider
+    # candidate pool and let the Reranker narrow back to +k+, so all three are
+    # measured at the same @k (a fair recall@k / MRR comparison).
     def evaluate(question, tenant)
-      retrieval = Retriever.new(tenant: tenant, query: question.text, k: @k, min_similarity: @min_similarity).call
+      retrieval_k = @rerank ? Retriever::DEFAULT_CANDIDATE_K : @k
+      retrieval = Retriever.new(
+        tenant: tenant, query: question.text, k: retrieval_k,
+        min_similarity: @min_similarity, hybrid: @hybrid
+      ).call
+      retrieval = Reranker.new(query: question.text, result: retrieval, k: @k).call if @rerank
       retrieved_contents = retrieval.chunks.map(&:content)
 
       # When judging, generate the answer once and reuse it for both the
