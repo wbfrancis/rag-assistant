@@ -1,13 +1,16 @@
 # frozen_string_literal: true
 
-# Offline evaluation harness (RAG_ASSISTANT_ARCHITECTURE.md §9, ADR 0005).
+# Offline evaluation harness (ADR 0005).
 #
 #   bin/rails eval                 # retrieval + abstention + LLM judge (JUDGE=true)
 #   bin/rails eval:retrieval       # retrieval + abstention only (fast, no judge)
 #
 # ENV knobs: DIR, K, MIN_SIMILARITY (sweep the relevance floor here), JUDGE,
-# SAMPLES, FORMAT=json (write tmp/eval/report-<ts>.json), and the CI gate
-# thresholds MIN_RECALL / MIN_MRR / MIN_ABSTENTION (exit non-zero if unmet).
+# SAMPLES, HYBRID (default true — dense+lexical RRF; set false for the dense
+# baseline), RERANK (default false — LLM second stage), FORMAT=json (write
+# tmp/eval/report-<ts>.json), and the CI gate thresholds MIN_RECALL / MIN_MRR /
+# MIN_ABSTENTION (exit non-zero if unmet). The dense → hybrid → hybrid+rerank
+# sweep is run with HYBRID/RERANK; that comparison is the README headline table.
 # Uses whatever LlmClient backend is configured — the real model when a key is
 # present (semantic signal), the Fake otherwise (deterministic plumbing check).
 
@@ -31,7 +34,9 @@ def run_eval(judge:)
     k: Integer(ENV.fetch("K", 8)),
     min_similarity: Float(ENV.fetch("MIN_SIMILARITY", Retriever::RELEVANCE_FLOOR)),
     judge: judge,
-    samples: Integer(ENV.fetch("SAMPLES", 1))
+    samples: Integer(ENV.fetch("SAMPLES", 1)),
+    hybrid: ENV.fetch("HYBRID", "true") != "false",
+    rerank: ENV.fetch("RERANK", "false") == "true"
   ).call
 
   puts report.to_table

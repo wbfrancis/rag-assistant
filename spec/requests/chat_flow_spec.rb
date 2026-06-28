@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# End-to-end happy path for Phase 3 (RAG_ASSISTANT_ARCHITECTURE.md §13.4):
+# End-to-end happy path for Phase 3:
 # sign in → ask a question in a conversation → the answer job retrieves grounded
 # context and generates an answer → the rendered conversation shows the answer
 # with a citation back to the source document.

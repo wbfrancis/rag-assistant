@@ -1,0 +1,43 @@
+# fly.toml app configuration file generated for rag-assistant-still-grass-4084 on 2026-06-27T20:07:31-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'rag-assistant-still-grass-4084'
+primary_region = 'iad'
+console_command = '/rails/bin/rails console'
+
+[build]
+
+[deploy]
+  release_command = 'bin/rails db:prepare'
+
+[env]
+  HTTP_PORT = '8080'
+  RAILS_ENV = 'production'
+  SOLID_QUEUE_IN_PUMA = 'true'
+  WEB_CONCURRENCY = '1'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '10s'
+    timeout = '2s'
+    grace_period = '5s'
+    method = 'GET'
+    path = '/up'
+    protocol = 'http'
+    tls_skip_verify = false
+
+    [http_service.checks.headers]
+      X-Forwarded-Proto = 'https'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '1gb'

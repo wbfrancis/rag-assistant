@@ -14,14 +14,16 @@ module Eval
       mean_judge: "mean judge score"
     }.freeze
 
-    attr_reader :rows, :k, :min_similarity, :backend, :judged
+    attr_reader :rows, :k, :min_similarity, :backend, :judged, :hybrid, :rerank
 
-    def initialize(rows:, k:, min_similarity:, backend:, judged:)
+    def initialize(rows:, k:, min_similarity:, backend:, judged:, hybrid: nil, rerank: nil)
       @rows = rows
       @k = k
       @min_similarity = min_similarity
       @backend = backend
       @judged = judged
+      @hybrid = hybrid
+      @rerank = rerank
     end
 
     def summary
@@ -41,9 +43,19 @@ module Eval
       end
     end
 
+    # Human label for the retrieval configuration under test: "dense", "hybrid",
+    # or "hybrid+rerank". nil hybrid/rerank (e.g. a Report built directly in a
+    # unit test) reads as "n/a" so the field is always present.
+    def retrieval_mode
+      return "n/a" if hybrid.nil?
+
+      base = hybrid ? "hybrid" : "dense"
+      rerank ? "#{base}+rerank" : base
+    end
+
     def to_h
       {
-        meta: { k: k, min_similarity: min_similarity, backend: backend, judged: judged },
+        meta: { k: k, min_similarity: min_similarity, backend: backend, judged: judged, retrieval: retrieval_mode },
         summary: summary,
         rows: rows
       }
@@ -71,7 +83,7 @@ module Eval
     def to_table
       lines = []
       lines << "RAG Evaluation Report"
-      lines << "backend=#{backend}  k=#{k}  min_similarity=#{format('%.2f', min_similarity)}  judge=#{judged ? 'on' : 'off'}"
+      lines << "backend=#{backend}  retrieval=#{retrieval_mode}  k=#{k}  min_similarity=#{format('%.2f', min_similarity)}  judge=#{judged ? 'on' : 'off'}"
       lines << "questions=#{summary[:questions]} (answerable=#{summary[:answerable]}, out-of-corpus=#{summary[:out_of_corpus]})"
       lines << ("-" * 44)
       lines << format("%-22s %s", "Metric", "Value")

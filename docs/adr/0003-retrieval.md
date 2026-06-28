@@ -11,7 +11,7 @@ Accepted
 Phase 2 builds the online query side's first half: retrieval. Given a tenant and
 a natural-language query, the system must return the most relevant chunks from
 *that tenant's* corpus, ranked, so Phase 3 can feed them to an answer generator.
-Constraints and forces (RAG_ASSISTANT_ARCHITECTURE.md §4, §5, §10):
+Constraints and forces:
 
 - Vectors live in Postgres via pgvector, behind an **HNSW** index built with
   `vector_cosine_ops` (ADR 0002). Queries must use cosine distance to match it.

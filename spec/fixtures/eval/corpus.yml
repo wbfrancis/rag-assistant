@@ -44,3 +44,40 @@
 # infrastructure vocabulary, but says nothing about uptime guarantees.
 - title: "Security"
   body: "All telemetry is encrypted in transit using TLS 1.3 and encrypted at rest. Each account's data is isolated from every other account's data."
+
+# --- Lexically-hard cases: a rare identifier buried in a long section --------
+# Modern dense embeddings (text-embedding-3-small here) actually match short,
+# clean exact tokens well — the textbook "dense can't see codes" failure does NOT
+# reproduce on tidy one-line records (we measured it). Where dense genuinely slips
+# is *dilution*: a rare identifier mentioned once inside a long, general chunk
+# whose embedding is dominated by all the surrounding prose, so a shorter,
+# tightly on-topic chunk that lacks the identifier out-ranks it. Postgres
+# full-text search keys on the exact lexeme regardless of chunk length, so the
+# hybrid lexical leg pulls the buried record to rank 1. Each gold body below
+# buries one identifier (E-7700, SB-3300, HX-9400) among on-theme prose; the
+# short, lexically-disjoint decoys further down are what out-rank it under dense.
+- title: "Storage Self-Check (Ops Manual §14)"
+  body: "The Helios storage subsystem runs a continuous self-check across every connected battery. In normal operation it samples cell voltage, charge and discharge rates, and pack temperature, then forwards a rolled-up summary to the cloud on the usual cadence alongside the rest of the site's panel telemetry. If the self-check finds that a pack has crossed its safe operating envelope it opens the protection contactor, halts charging, and writes diagnostic reference E-7700 to the local event log before the next maintenance window. Operators usually notice the condition first in the dashboard health panel rather than in the raw log, and the recommended response is to inspect the enclosure airflow and cooling fans for obstructions."
+
+- title: "Firmware Release Notices (Ops Manual §22)"
+  body: "Gateway firmware is delivered as a signed image during the nightly maintenance window, and most sites never need to think about it. Occasionally a release carries a behavioural change significant enough that Helios issues a written notice to operators describing the change, the sites affected, and any manual step required before or after the rollout. The most recent such notice, service bulletin SB-3300, documents a revised retry schedule for webhook delivery together with a stricter clock-drift tolerance on gateway authentication. Bulletins are archived in the operator console and are also emailed to the account's technical contact when they are published."
+
+- title: "Gateway Capacities (Ops Manual §3)"
+  body: "Each Helios site is anchored by a gateway unit that bridges the on-site solar hardware to the cloud. The current generation is offered in three capacities to match array size, from small residential roofs to large split arrays, and all of them share the same enclosure, mounting kit, and cellular failover modem. The largest model, carrying part number HX-9400, supports the highest panel count and is the unit specified for installations that span two separate arrays. Smaller installations are typically fine with one of the lower-capacity units, which are mechanically identical but provisioned for fewer panels."
+
+# Decoys: short pages that are *semantically* on-topic for each lexically-hard
+# question but deliberately phrased with synonyms, so they share no distinctive
+# word with the question. Being short and tightly on-theme, dense ranks them at
+# or above the long, diluted answer chunk — dragging MRR down. Crucially they are
+# lexically disjoint from the query (no "diagnostic reference", no "bulletin", no
+# "part number"), so they are NOT lexical-leg matches: that breaks the RRF tie
+# the answer chunk would otherwise land in, letting the lexical leg pull the
+# identifier-bearing chunk to rank 1 decisively (and reproducibly).
+- title: "Fault Codes"
+  body: "When the unit detects a problem it saves a short alphanumeric code to its log, and the operator console shows the matching fix from the support manual. Each code maps to one fault, so the same code always points to the same underlying issue and the same recommended remedy. Crews are trained to read the code off the console first, before they open the enclosure or touch any wiring, and to confirm the remedy in the manual rather than acting from memory."
+
+- title: "Release Notices"
+  body: "Helios occasionally posts a written notice to operators summarizing an important firmware update and any steps they must follow. The notice goes out ahead of the rollout so a site can prepare, and a copy stays in the operator console for later reference. Most updates need no action at all and are applied silently overnight; a notice is reserved for the rare release that changes how a site behaves or asks an operator to do something by hand."
+
+- title: "Hardware Identifiers"
+  body: "Each unit is tagged with an identifier that encodes its capacity, so an installer can tell which hardware a site runs when ordering spares or planning an upgrade. The tag is printed on the chassis label and is also reported by the unit to the cloud on first boot. Because the identifier encodes capacity rather than a serial sequence, two sites with the same hardware share the same identifier even though they were commissioned years apart."

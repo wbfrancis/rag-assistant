@@ -11,12 +11,15 @@ module Eval
   # rollback works whether or not an outer transaction is present (e.g. RSpec's
   # transactional fixtures), which a plain nested transaction would not.
   class Runner
-    def initialize(dataset:, k: 8, min_similarity: Retriever::RELEVANCE_FLOOR, judge: false, samples: 1)
+    def initialize(dataset:, k: 8, min_similarity: Retriever::RELEVANCE_FLOOR, judge: false, samples: 1,
+                   hybrid: true, rerank: false)
       @dataset = dataset
       @k = k
       @min_similarity = min_similarity
       @judge = judge
       @samples = samples
+      @hybrid = hybrid
+      @rerank = rerank
     end
 
     def call
@@ -28,21 +31,46 @@ module Eval
         raise ActiveRecord::Rollback
       end
 
-      Report.new(rows: rows, k: @k, min_similarity: @min_similarity, backend: backend_name, judged: @judge)
+      Report.new(rows: rows, k: @k, min_similarity: @min_similarity, backend: backend_name, judged: @judge,
+                 hybrid: @hybrid, rerank: @rerank)
     end
 
     private
 
+    # Retrieve the question, then optionally re-rank. The three head-to-head
+    # configurations the README table reports are exactly: dense (hybrid off),
+    # hybrid (default), and hybrid+rerank. When re-ranking we retrieve the wider
+    # candidate pool and let the Reranker narrow back to +k+, so all three are
+    # measured at the same @k (a fair recall@k / MRR comparison).
     def evaluate(question, tenant)
-      retrieval = Retriever.new(tenant: tenant, query: question.text, k: @k, min_similarity: @min_similarity).call
+      retrieval_k = @rerank ? Retriever::DEFAULT_CANDIDATE_K : @k
+      retrieval = Retriever.new(
+        tenant: tenant, query: question.text, k: retrieval_k,
+        min_similarity: @min_similarity, hybrid: @hybrid
+      ).call
+      retrieval = Reranker.new(query: question.text, result: retrieval, k: @k).call if @rerank
       retrieved_contents = retrieval.chunks.map(&:content)
+
+      # When judging, generate the answer once and reuse it for both the
+      # abstention check and the grade. The system declines in *two* layers
+      # (ADR 0005): the Retriever's relevance floor, and AnswerGenerator's
+      # grounding prompt returning ABSTAIN_MESSAGE when the cleared-the-floor
+      # context still doesn't answer the question — the latter is what catches
+      # on-topic near-miss questions the floor alone lets through. With judging
+      # off we measure the floor layer only (deterministic, retrieval-focused).
+      answer = (@judge ? generate_answer(question, retrieval, tenant) : nil)
+      declined = declined?(retrieval, answer)
 
       base = {
         id: question.id,
         question: question.text,
         out_of_corpus: question.out_of_corpus?,
-        abstained: retrieval.abstained?,
-        retrieved_count: retrieved_contents.size
+        abstained: declined,
+        retrieved_count: retrieved_contents.size,
+        # Captured so the JSON artifact is diagnostic: an exact-string abstention
+        # check can't tell a fabrication from a model-phrased "I don't know", so
+        # near-miss OOC answers must be eyeballed (ADR 0005). nil when not judging.
+        answer: answer&.truncate(300)
       }
 
       return base.merge(hit: nil, reciprocal_rank: nil, judge_score: nil) if question.out_of_corpus?
@@ -51,16 +79,14 @@ module Eval
       base.merge(
         hit: reciprocal_rank.positive?,
         reciprocal_rank: reciprocal_rank,
-        judge_score: (@judge ? judge_score(question, retrieval, tenant) : nil)
+        judge_score: judge_score(question, answer)
       )
     end
 
-    # Generate the answer via the real production path, then grade it. An
-    # abstention is not graded (there is no answer to judge): nil drops out of the
-    # mean.
-    def judge_score(question, retrieval, tenant)
-      answer = generate_answer(question, retrieval, tenant)
-      return nil if answer == AnswerGenerator::ABSTAIN_MESSAGE
+    # Grade a generated answer against the reference. An abstention (or no answer,
+    # when judging is off) is not graded: nil drops out of the mean.
+    def judge_score(question, answer)
+      return nil if answer.nil? || answer == AnswerGenerator::ABSTAIN_MESSAGE
 
       Judge.new(
         question: question.text,
@@ -68,6 +94,16 @@ module Eval
         generated_answer: answer,
         samples: @samples
       ).call[:score]
+    end
+
+    # The model phrases a refusal in its own words ("I don't know") — which the
+    # grounding prompt (AnswerGenerator::SYSTEM_PROMPT) explicitly instructs — so
+    # an exact match on the canned floor message under-counts abstention and reads
+    # a correct decline as a fabrication. Detect the refusal the prompt induces.
+    REFUSAL = /\bi\s+do\s?n['’]?t\s+know\b/i
+
+    def declined?(retrieval, answer)
+      retrieval.abstained? || answer == AnswerGenerator::ABSTAIN_MESSAGE || REFUSAL.match?(answer.to_s)
     end
 
     def generate_answer(question, retrieval, tenant)

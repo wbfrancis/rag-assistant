@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 # LlmClient is the single, narrow seam between the application and whatever LLM
-# provider backs it. Per RAG_ASSISTANT_ARCHITECTURE.md §3, *all* retry, backoff,
-# timeout and fallback logic lives here so that swapping providers later only
-# touches this class (and its backend).
+# provider backs it. All retry, backoff, timeout and fallback logic lives here so
+# that swapping providers later only touches this class (and its backend).
 #
 # Phase 0 ships the interface plus a deterministic test Fake only. The default
 # real backend is a +PendingBackend+ that raises +NotConfiguredError+, so

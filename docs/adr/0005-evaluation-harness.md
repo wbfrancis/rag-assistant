@@ -11,7 +11,7 @@ Accepted
 Phases 0–3 produced a working RAG loop, but "the answers seem good" is not a
 measurable property. Changing the chunker, the relevance floor, `k`, or the
 answer prompt could improve or regress quality and we would not know. The
-architecture (RAG_ASSISTANT_ARCHITECTURE.md §2, §9) calls an offline evaluation
+architecture calls an offline evaluation
 harness the primary senior differentiator and requires: retrieval metrics
 (recall@k, MRR), an answer-quality signal (LLM-as-judge), an abstention check for
 out-of-corpus questions, and a report so a change shows a measurable delta. Forces:
@@ -87,3 +87,12 @@ and a `rake eval` / `rake eval:retrieval` task. Key choices:
 - The LLM-judge can disagree run to run; treated as directional, that is acceptable.
 - Validation in `Dataset` fails loudly on a marker absent from the corpus, so a
   fixture typo surfaces instead of masquerading as a recall miss.
+- **Abstention detection must match the refusal vocabulary the prompt induces.**
+  The system declines in two layers — the Retriever's floor (canned
+  `ABSTAIN_MESSAGE`) and the model refusing in its own words. Because
+  `AnswerGenerator::SYSTEM_PROMPT` instructs the model to say "I don't know", the
+  runner counts the floor message **or** an "I don't know" refusal as a decline.
+  An exact-string check on only the canned message read a correct model refusal as
+  a fabrication and reported abstention 0.33 when the true value was 1.00 — found
+  by capturing the generated answer into the report row (now part of the JSON
+  artifact) so near-miss OOC answers can be eyeballed.

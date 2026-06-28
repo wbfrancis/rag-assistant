@@ -68,4 +68,28 @@ RSpec.describe Eval::Runner do
     # No chat completions at all on the retrieval-only path (embeddings only).
     expect(fake.chat_calls).to eq(0)
   end
+
+  it "counts a generation-layer decline as abstaining and does not grade it" do
+    # The question clears the relevance floor (verbatim match), so the Retriever
+    # does NOT abstain — but the model returns ABSTAIN_MESSAGE, the second-layer
+    # grounding guardrail. The run must treat that as a decline (ADR 0005).
+    LlmClient.backend = FakeLlmClient.new(chat_tokens: [ AnswerGenerator::ABSTAIN_MESSAGE ])
+
+    report = described_class.new(dataset: deterministic_dataset, judge: true).call
+    row = report.rows.find { |r| r[:id] == "retention" }
+
+    expect(row[:abstained]).to be(true)        # declined at generation, not at the floor
+    expect(report.summary[:mean_judge]).to be_nil  # a declined answer is not graded
+  end
+
+  it "recognizes a model-phrased \"I don't know\" as a decline (not a fabrication)" do
+    # The model refuses in its own words rather than emitting the canned message;
+    # an exact-string check would miss it and undercount abstention.
+    LlmClient.backend = FakeLlmClient.new(chat_tokens: [ "I don't know." ])
+
+    report = described_class.new(dataset: deterministic_dataset, judge: true).call
+    row = report.rows.find { |r| r[:id] == "retention" }
+
+    expect(row[:abstained]).to be(true)
+  end
 end

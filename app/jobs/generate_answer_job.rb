@@ -11,8 +11,8 @@ class GenerateAnswerJob < ApplicationJob
 
   # Runs the online query side off the web worker (so Puma is never blocked on a
   # slow model call) and broadcasts the answer into the conversation's Turbo
-  # Stream as it streams (RAG_ASSISTANT_ARCHITECTURE.md §7, §8):
-  #   contextualize → retrieve → generate (broadcasting tokens) → replace bubble.
+  # Stream as it streams:
+  #   contextualize → retrieve → (re-rank) → generate (broadcasting tokens) → replace.
   def perform(user_message_id:, assistant_message_id:)
     assistant    = Message.find(assistant_message_id)
     user_message = Message.find(user_message_id)
@@ -21,7 +21,7 @@ class GenerateAnswerJob < ApplicationJob
     standalone = QueryContextualizer.new(
       conversation: conversation, question: user_message.content, current_message: user_message
     ).call
-    retrieval  = Retriever.new(tenant: conversation.tenant, query: standalone).call
+    retrieval  = retrieve(conversation.tenant, standalone)
 
     AnswerGenerator.new(message: assistant, question: user_message.content, retrieval: retrieval).call do |token|
       broadcast_token(conversation, assistant, token)
@@ -31,6 +31,20 @@ class GenerateAnswerJob < ApplicationJob
   end
 
   private
+
+  # Hybrid retrieval, then an optional LLM re-rank second stage (ADR 0008). When
+  # re-rank is enabled we retrieve a *wider* candidate pool so the model has room
+  # to promote a chunk the fusion ranked low; the Reranker reorders and the
+  # AnswerGenerator's token budget packs the best-first context. Re-rank is
+  # never-worse-than-fused, so a flaky model call degrades to plain hybrid.
+  def retrieve(tenant, standalone)
+    rerank    = Reranker.enabled?
+    pool_k    = rerank ? Retriever::DEFAULT_CANDIDATE_K : Retriever::DEFAULT_K
+    retrieval = Retriever.new(tenant: tenant, query: standalone, k: pool_k).call
+    return retrieval unless rerank
+
+    Reranker.new(query: standalone, result: retrieval, k: Retriever::DEFAULT_K).call
+  end
 
   # Append one streamed token into the assistant bubble's body as it arrives.
   def broadcast_token(conversation, assistant, token)

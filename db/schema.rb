@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_24_120002) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_26_211003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -46,6 +46,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_120002) do
   create_table "chunks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.text "content", null: false
     t.string "content_hash"
+    t.virtual "content_tsv", type: :tsvector, as: "to_tsvector('english'::regconfig, content)", stored: true
     t.datetime "created_at", null: false
     t.uuid "document_id", null: false
     t.vector "embedding", limit: 1536
@@ -57,6 +58,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_120002) do
     t.integer "token_count"
     t.datetime "updated_at", null: false
     t.index ["content_hash"], name: "index_chunks_on_content_hash"
+    t.index ["content_tsv"], name: "index_chunks_on_content_tsv", using: :gin
     t.index ["document_id"], name: "index_chunks_on_document_id"
     t.index ["embedding"], name: "index_chunks_on_embedding", opclass: :vector_cosine_ops, using: :hnsw
     t.index ["embedding_model"], name: "index_chunks_on_embedding_model"

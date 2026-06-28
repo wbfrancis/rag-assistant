@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   resource :registration, only: %i[new create]
   resources :documents
   get "search", to: "search#index"
+  get "dashboard", to: "dashboard#show"
   resources :conversations, only: %i[index show create] do
     resources :messages, only: %i[create]
   end
