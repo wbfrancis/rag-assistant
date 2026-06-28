@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Rolling embedding-model re-index (RAG_ASSISTANT_ARCHITECTURE.md §10, ADR 0006).
+# Rolling embedding-model re-index (ADR 0006).
 #
 #   bin/rails reindex:status                                  # counts per embedding_model
 #   bin/rails reindex:backfill                                # re-embed to the configured model

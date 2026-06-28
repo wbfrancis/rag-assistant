@@ -2,8 +2,8 @@
 
 module Eval
   # The deterministic core of the harness: pure functions over plain data, no DB
-  # and no LLM, so they can be exhaustively unit-tested (RAG_ASSISTANT_ARCHITECTURE
-  # §9). Retrieval quality is scored by whether a gold *marker* appears among the
+  # and no LLM, so they can be exhaustively unit-tested. Retrieval quality is
+  # scored by whether a gold *marker* appears among the
   # chunks the Retriever surfaced, and where.
   #
   # Note on recall@k: the Retriever is already called with +k+, so the list of

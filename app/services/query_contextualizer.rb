@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Turns a follow-up question into a standalone one (RAG_ASSISTANT_ARCHITECTURE.md
-# §5). Multi-turn chat breaks naive retrieval: "what about its limits?" has no
+# Turns a follow-up question into a standalone one. Multi-turn chat breaks naive
+# retrieval: "what about its limits?" has no
 # embeddable meaning on its own because "its" refers back up the conversation. So
 # before the Retriever embeds anything, we condense the recent history + the new
 # question into a self-contained query.

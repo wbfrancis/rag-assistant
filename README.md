@@ -126,7 +126,7 @@ RSpec suite on every push/PR.
 
 ## Evaluation harness
 
-An offline eval (architecture §9) lives under `app/services/eval/` and is runnable as a rake
+An offline eval lives under `app/services/eval/` and is runnable as a rake
 task. It ingests a small curated corpus (`spec/fixtures/eval/`) through the **real** pipeline,
 runs every fixture question, and reports retrieval + answer quality:
 
@@ -153,8 +153,8 @@ ops-manual chunk, out-ranked under dense by a short on-topic page that lacks the
 
 | Retrieval | recall@8 | MRR (all) | abstention | buried-id subset MRR |
 | --- | --- | --- | --- | --- |
-| dense (`HYBRID=false`)        | 1.00 | 0.95 | 0.33 | 0.83 |
-| **hybrid** (default)          | 1.00 | **1.00** | 0.33 | **1.00** |
+| dense (`HYBRID=false`) | 1.00 | 0.95 | 0.33 | 0.83 |
+| **hybrid** (default) | 1.00 | **1.00** | 0.33 | **1.00** |
 | hybrid + re-rank (`RERANK=true`) | 1.00 | 0.95 | 0.33 | 0.83 |
 
 Reproduce: `HYBRID=false bin/rails eval:retrieval`, then the default, then
@@ -186,15 +186,15 @@ It is identical for dense and hybrid, confirming fusion preserves the abstention
   (`LlmPricing`), never stored, so a price change doesn't leave stale numbers in the DB.
 - **Structured retrieval logging** — every query emits one JSON line per retrieval and
   per generation (`RetrievalLogger`): scores, timings, token counts, ids — **never** the
-  raw query or chunk text (§10).
+  raw query or chunk text.
 - **Re-indexing** — changing the embedding model invalidates existing vectors. The
   `reindex` task performs an idempotent, resumable, rolling re-embed:
 
-  ```bash
+```bash
   bin/rails reindex:status                 # chunk counts per embedding_model
   bin/rails reindex:backfill               # re-embed to the configured model
   TARGET_MODEL=text-embedding-3-large bin/rails reindex:backfill
-  ```
+```
 
   Validate with `rake eval`, then point `LLM_EMBEDDING_MODEL` at the new model to cut the
   Retriever over. See [ADR 0006](docs/adr/0006-reindexing.md).
@@ -203,20 +203,20 @@ It is identical for dense and hybrid, confirming fusion preserves the abstention
 
 Deploys to **Fly.io** (reusing the repo `Dockerfile`) with a managed pgvector Postgres.
 The web machine runs Solid Queue **inside Puma** (`SOLID_QUEUE_IN_PUMA=true` in
-[`fly.toml`](fly.toml)), so one process serves both web and background jobs. Full
+`fly.toml`), so one process serves both web and background jobs. Full
 step-by-step runbook — database + secrets + first deploy — is in
-[`docs/DEPLOY.md`](docs/DEPLOY.md).
+`docs/DEPLOY.md`.
 
 ## Project layout
 
 ```
 app/services/   document_ingestor, chunker, text_extractor, llm_client,
-                query_contextualizer, retriever, answer_generator,
+                query_contextualizer, retriever, reranker, answer_generator,
                 reindexer, retrieval_logger, llm_pricing, eval/
 app/jobs/       ingest_document_job, generate_answer_job
 app/models/     user, document, chunk, conversation, message
 app/controllers/ documents, conversations, messages, search, dashboard
 lib/tasks/      eval.rake, reindex.rake
 spec/           models/ requests/ services/ system/ factories/ fixtures/eval/
-docs/adr/       0001–0006
+docs/adr/       0001–0008
 ```

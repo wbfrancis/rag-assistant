@@ -3,7 +3,7 @@ require "rails_helper"
 # All examples run against the deterministic, offline FakeLlmClient: identical
 # text embeds to an identical vector (cosine similarity 1.0) and unrelated text
 # is ~orthogonal (~0). That is what makes both the above-floor and below-floor
-# paths reproducible without a network (§11).
+# paths reproducible without a network.
 RSpec.describe Retriever do
   let(:fake) { FakeLlmClient.new }
 

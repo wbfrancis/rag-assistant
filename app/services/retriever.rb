@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Retriever is the online query side's first half (RAG_ASSISTANT_ARCHITECTURE.md
-# §5): given a tenant and a natural-language query, return the tenant's most
+# Retriever is the online query side's first half: given a tenant and a
+# natural-language query, return the tenant's most
 # relevant chunks, ranked, capped at +k+, and gated behind a relevance floor.
 #
 # Retrieval is **hybrid** (ADR 0007): a *dense* leg (pgvector cosine kNN over the
@@ -13,7 +13,7 @@
 # run hybrid-vs-dense head to head; with it off the Retriever is the pure dense
 # kNN of ADR 0003.
 #
-# The security core is the tenant pre-filter (§4 / §10): *both* legs chain off
+# The security core is the tenant pre-filter: *both* legs chain off
 # +Chunk.for_tenant+, so vector search, lexical search and tenant isolation each
 # compose into a single SQL query and a user can never reach another tenant's
 # rows. The denormalized +tenant_id+ on +chunks+ is what makes that pre-filter
@@ -29,7 +29,7 @@
 # +GenerateAnswerJob+ runs +QueryContextualizer+ to condense the history + new
 # question into a standalone query before handing it here. Each search emits one
 # structured log line (scores + timings + mode, no content) via +RetrievalLogger+
-# for debuggability (§10). See docs/adr/0003-retrieval.md and 0007-hybrid-search.md.
+# for debuggability. See docs/adr/0003-retrieval.md and 0007-hybrid-search.md.
 class Retriever
   # Cosine-similarity floor below which the top hit is treated as "no relevant
   # context" and the search abstains. 0.30 is a realistic threshold for
@@ -190,7 +190,7 @@ class Retriever
 
   # The non-negotiable security core. +for_tenant+ comes first so tenant
   # isolation and the kNN search compose into one SQL query (cheap because
-  # +tenant_id+ is denormalized onto chunks — §4 / ADR 0002). The
+  # +tenant_id+ is denormalized onto chunks — ADR 0002). The
   # +embedding_model+ filter keeps mixed-model vectors out of results during a
   # rolling re-index, and +where.not(embedding: nil)+ skips chunks still
   # mid-ingestion. Cosine distance matches the HNSW +vector_cosine_ops+ index.

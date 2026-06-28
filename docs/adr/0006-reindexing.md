@@ -11,8 +11,8 @@ Accepted
 The embedding model is not forever. A better model ships, a price changes, or the
 provider deprecates one — and when it changes, **existing vectors become invalid**:
 a query embedded with model B is not comparable to chunk vectors produced by model
-A, so a mixed corpus silently returns garbage rankings (RAG_ASSISTANT_ARCHITECTURE.md
-§10). We need a way to move the corpus to a new model without (a) a blind wipe that
+A, so a mixed corpus silently returns garbage rankings. We need a way to move the
+corpus to a new model without (a) a blind wipe that
 deletes all retrieval until everything is re-embedded, and (b) ever comparing
 vectors across models.
 

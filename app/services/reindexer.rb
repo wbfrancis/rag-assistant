@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Rolling embedding-model re-index (RAG_ASSISTANT_ARCHITECTURE.md §10, ADR 0006).
+# Rolling embedding-model re-index (ADR 0006).
 #
 # Every chunk records the embedding_model that produced its vector, so changing
 # models doesn't require a blind wipe: this re-embeds, in batches, only the

@@ -12,7 +12,7 @@ Phase 3 grounds each assistant answer in the chunks the Retriever surfaced and
 renders **citations** linking the answer back to those source chunks. We persist
 `messages.chunk_ids` (a `uuid[]`) so an answer records exactly which chunks
 produced it — essential for both the UI citations and debugging "why did the model
-say that?" (RAG_ASSISTANT_ARCHITECTURE.md §4).
+say that?".
 
 But chunks are not stable. Ingestion is idempotent and reconciles chunks as a diff
 (ADR 0001 / `DocumentIngestor`): re-ingesting a document inserts new chunks and

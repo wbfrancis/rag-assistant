@@ -11,7 +11,7 @@ Accepted
 Phases 0–3 produced a working RAG loop, but "the answers seem good" is not a
 measurable property. Changing the chunker, the relevance floor, `k`, or the
 answer prompt could improve or regress quality and we would not know. The
-architecture (RAG_ASSISTANT_ARCHITECTURE.md §2, §9) calls an offline evaluation
+architecture calls an offline evaluation
 harness the primary senior differentiator and requires: retrieval metrics
 (recall@k, MRR), an answer-quality signal (LLM-as-judge), an abstention check for
 out-of-corpus questions, and a report so a change shows a measurable delta. Forces:

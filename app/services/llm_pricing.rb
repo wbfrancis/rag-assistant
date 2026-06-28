@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Per-model token pricing for the cost dashboard (RAG_ASSISTANT_ARCHITECTURE.md
-# §10). We persist only *token counts* on messages; the dollar cost is derived
+# Per-model token pricing for the cost dashboard. We persist only *token counts*
+# on messages; the dollar cost is derived
 # here on read, because provider prices change over time — baking a computed
 # dollar amount into a column would freeze a number that goes stale and
 # duplicate state we can already recompute (Phase 5 plan, decision 1).

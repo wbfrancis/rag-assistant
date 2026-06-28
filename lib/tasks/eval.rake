@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Offline evaluation harness (RAG_ASSISTANT_ARCHITECTURE.md §9, ADR 0005).
+# Offline evaluation harness (ADR 0005).
 #
 #   bin/rails eval                 # retrieval + abstention + LLM judge (JUDGE=true)
 #   bin/rails eval:retrieval       # retrieval + abstention only (fast, no judge)

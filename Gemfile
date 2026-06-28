@@ -77,3 +77,5 @@ gem "pdf-reader", "~> 2.12"
 gem "rspec-rails", "~> 8.0", groups: [ :development, :test ]
 gem "factory_bot_rails", "~> 6.5", groups: [ :development, :test ]
 gem "faker", "~> 3.8", groups: [ :development, :test ]
+
+gem "dockerfile-rails", ">= 1.7", group: :development

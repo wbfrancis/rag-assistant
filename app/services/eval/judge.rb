@@ -3,7 +3,7 @@
 require "json"
 
 module Eval
-  # LLM-as-judge (RAG_ASSISTANT_ARCHITECTURE.md §9): grade a generated answer
+  # LLM-as-judge: grade a generated answer
   # against a reference on faithfulness + relevance, 1–5. This metric is
   # explicitly *directional* — it is non-deterministic, costs live API calls, and
   # has known biases (length, self-preference) — so the harness reports it but

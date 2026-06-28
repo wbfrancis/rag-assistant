@@ -11,7 +11,7 @@ class GenerateAnswerJob < ApplicationJob
 
   # Runs the online query side off the web worker (so Puma is never blocked on a
   # slow model call) and broadcasts the answer into the conversation's Turbo
-  # Stream as it streams (RAG_ASSISTANT_ARCHITECTURE.md §7, §8):
+  # Stream as it streams:
   #   contextualize → retrieve → (re-rank) → generate (broadcasting tokens) → replace.
   def perform(user_message_id:, assistant_message_id:)
     assistant    = Message.find(assistant_message_id)

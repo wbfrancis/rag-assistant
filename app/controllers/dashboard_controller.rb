@@ -1,5 +1,5 @@
 class DashboardController < ApplicationController
-  # Per-tenant usage view (RAG_ASSISTANT_ARCHITECTURE.md §10). Everything is
+  # Per-tenant usage view. Everything is
   # scoped through Current.user's conversations, so one tenant can never see
   # another's tokens or cost — the same isolation posture as the rest of the app.
   def show

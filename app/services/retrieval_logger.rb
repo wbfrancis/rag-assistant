@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-# Structured, one-line-per-event logging for the online query path
-# (RAG_ASSISTANT_ARCHITECTURE.md §10: "log retrieval scores and timings per
-# query for debuggability"). Each event is a single JSON object emitted via
+# Structured, one-line-per-event logging for the online query path.
+# Each event is a single JSON object emitted via
 # Rails.logger, so the lines are greppable and feedable to a log pipeline.
 #
 # Privacy: we deliberately log lengths, ids, scores and timings — never the raw
