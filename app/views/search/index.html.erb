@@ -18,7 +18,7 @@
       <% @result.scored.each do |chunk, similarity| %>
         <div class="card result-card">
           <div class="meta">
-            similarity <%= format("%.3f", similarity) %> ·
+            similarity <%= similarity ? format("%.3f", similarity) : "lexical only" %> ·
             <%= link_to chunk.document.title, document_path(chunk.document) %> ·
             #<%= chunk.position %>
           </div>
