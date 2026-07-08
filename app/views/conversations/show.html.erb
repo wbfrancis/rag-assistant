@@ -1,23 +1,45 @@
 <% content_for :title, @conversation.title.presence || "Conversation" %>
 
-<p><%= link_to "← All conversations", conversations_path %></p>
-
-<%# Subscribe to this conversation's Turbo Stream: the GenerateAnswerJob %>
-<%# broadcasts streamed tokens and the final message here over WebSockets. %>
+<%# Subscribe to this conversation's Turbo Stream: GenerateAnswerJob broadcasts
+    streamed tokens and the final message here over WebSockets. %>
 <%= turbo_stream_from @conversation %>
 
-<div data-controller="chat">
-  <div id="messages" data-chat-target="list"
-       style="border: 1px solid #eee; padding: 0.5rem; min-height: 12rem; max-height: 28rem; overflow-y: auto;">
-    <%= render @messages %>
-  </div>
+<div class="rr" data-controller="reading-room" data-action="turbo:frame-load->reading-room#sync">
 
-  <%= form_with model: [ @conversation, @message ],
-                data: { action: "turbo:submit-end->chat#reset" },
-                style: "margin-top: 0.75rem;" do |f| %>
-    <%= f.text_area :content, placeholder: "Ask a question about your documents…",
-                    rows: 3, style: "width: 100%; box-sizing: border-box;",
-                    data: { chat_target: "input" } %>
-    <%= f.submit "Send" %>
-  <% end %>
+  <section class="rr-pane rr-doc-pane" data-screen-label="Document pane">
+    <%# The "frame" Stimulus target lives on the inner div the reader/library
+        partials render (documents/_reader, documents/_library) rather than on
+        this <turbo-frame> itself — that inner div is guaranteed to be part of
+        the swapped content on every navigation, whereas the frame element's
+        own attributes are not. %>
+    <%= turbo_frame_tag "doc_pane" do %>
+      <% if @doc_pane_document %>
+        <%= render "documents/reader", document: @doc_pane_document, chunks: @doc_pane_chunks, active_chunk_id: @active_chunk_id, sim: @doc_pane_sim %>
+      <% else %>
+        <%= render "documents/library", documents: @documents %>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="rr-pane rr-chat-pane" data-controller="chat" data-screen-label="Chat pane">
+    <div class="chat-scroll" id="messages" data-chat-target="list">
+      <%= render partial: "messages/message", collection: @messages, locals: { active_chunk_id: @active_chunk_id } %>
+    </div>
+
+    <div class="composer-wrap">
+      <%= form_with model: [ @conversation, @message ],
+                    data: { action: "turbo:submit-end->chat#reset" } do |f| %>
+        <div class="composer">
+          <span class="composer-prompt">&gt;</span>
+          <%= f.text_field :content, placeholder: "ask about your documents…",
+                            autocomplete: "off", data: { chat_target: "input" } %>
+          <%= f.submit "send", class: "composer-send" %>
+        </div>
+      <% end %>
+      <div class="composer-hint">
+        answers are grounded in your documents · below relevance floor <%= format("%.2f", Retriever::RELEVANCE_FLOOR) %> the assistant abstains
+      </div>
+    </div>
+  </section>
+
 </div>

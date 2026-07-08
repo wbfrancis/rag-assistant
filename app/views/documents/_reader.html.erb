@@ -1,0 +1,54 @@
+<%# A single document's chunks, in order. When "active_chunk_id" is present
+    (arrived via a citation chip) the matching chunk is highlighted, scrolled
+    into view client-side (reading_room_controller), and — when "sim" is
+    known — shown against the relevance floor as a similarity bar. Reused
+    standalone (documents#show) and embedded in the conversation's #doc_pane
+    frame. %>
+<%
+  chunks = chunks.to_a
+  total = chunks.size
+  highlighted = active_chunk_id.present? ? chunks.find { |c| c.id == active_chunk_id } : nil
+%>
+<div data-reading-room-target="frame" data-active-chunk-id="<%= highlighted&.id %>" class="doc-pane-content">
+  <div class="doc-toolbar">
+    <%= link_to "← library", documents_path, class: "doc-back", data: { turbo_frame: "doc_pane" } %>
+    <span class="doc-header">
+      <%= document.title %> ·
+      <% if highlighted %>
+        chunk <%= highlighted.position + 1 %>/<%= total %><% if sim %> · sim 0.<%= sim.to_s.rjust(2, "0") %><% end %>
+      <% else %>
+        <%= pluralize(total, "chunk") %>
+      <% end %>
+    </span>
+  </div>
+
+  <% if sim && highlighted %>
+    <div class="doc-simbar"><div class="doc-simbar-fill" style="width: <%= sim %>%"></div></div>
+  <% end %>
+
+  <div class="doc-scroll">
+    <% if chunks.empty? %>
+      <p class="empty-state">
+        <% if document.failed? %>
+          Ingestion failed — no chunks were indexed.
+        <% else %>
+          Still ingesting — chunks will appear here shortly.
+        <% end %>
+      </p>
+    <% else %>
+      <% chunks.each do |chunk| %>
+        <p class="doc-para <%= "doc-para--hl" if chunk == highlighted %>"><%= chunk.content %></p>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="doc-meta-row">
+    <%= doc_type_label(document) %> · <%= document.status %>
+    <% if document.failed? && document.error_message.present? %>
+      <span class="error">Error: <%= document.error_message %></span>
+    <% end %>
+    <div class="doc-delete">
+      <%= button_to "delete document", document, method: :delete, form: { data: { turbo_confirm: "Delete “#{document.title}”?" } }, class: "btn btn-danger" %>
+    </div>
+  </div>
+</div>

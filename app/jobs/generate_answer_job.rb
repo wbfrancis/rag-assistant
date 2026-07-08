@@ -23,8 +23,10 @@ class GenerateAnswerJob < ApplicationJob
     ).call
     retrieval  = retrieve(conversation.tenant, standalone)
 
+    first_token = true
     AnswerGenerator.new(message: assistant, question: user_message.content, retrieval: retrieval).call do |token|
-      broadcast_token(conversation, assistant, token)
+      broadcast_token(conversation, assistant, token, first: first_token)
+      first_token = false
     end
 
     broadcast_final(conversation, assistant)
@@ -47,8 +49,14 @@ class GenerateAnswerJob < ApplicationJob
   end
 
   # Append one streamed token into the assistant bubble's body as it arrives.
-  def broadcast_token(conversation, assistant, token)
-    Turbo::StreamsChannel.broadcast_append_to(
+  # The bubble's body starts out holding a typing indicator (see
+  # messages/_message); the first token *replaces* that indicator's content,
+  # every token after that appends, so the dots disappear the instant real text
+  # starts arriving instead of sitting alongside it.
+  def broadcast_token(conversation, assistant, token, first:)
+    method = first ? :broadcast_update_to : :broadcast_append_to
+    Turbo::StreamsChannel.public_send(
+      method,
       conversation,
       target: "#{dom_id(assistant)}_body",
       html: ERB::Util.html_escape(token)

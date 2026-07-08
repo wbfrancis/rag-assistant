@@ -1,20 +1,19 @@
-<%# One chat bubble. The body has its own id so streamed tokens can be appended %>
-<%# into it while the answer generates; on completion the whole bubble is %>
-<%# replaced with this same partial, now carrying citations. %>
-<div id="<%= dom_id(message) %>" class="message message--<%= message.role %>"
-     style="margin-bottom: 0.75rem;">
-  <strong style="text-transform: capitalize; color: <%= message.assistant? ? "#225" : "#252" %>;">
-    <%= message.role %>
-  </strong>
-  <div id="<%= dom_id(message) %>_body"><%= simple_format(message.content) %></div>
-
-  <% if message.assistant? && message.citations.present? %>
-    <small style="color: #666;">
-      Sources:
-      <% message.citations.each_with_index do |citation, i| %>
-        <%= link_to "[#{i + 1}] #{citation["document_title"]} ##{citation["position"]}",
-                    document_path(citation["document_id"]) %><%= " ·" unless i == message.citations.size - 1 %>
+<%# One chat bubble. The assistant body has its own id so streamed tokens can
+    be appended into it while the answer generates (GenerateAnswerJob); on
+    completion the whole bubble is replaced with this same partial, now
+    carrying citations and a trace line. "active_chunk_id" (only known on the
+    conversation page's initial render — absent for a live Turbo Stream
+    append/replace) marks which citation chip, if any, matches what's
+    currently open in the document pane. %>
+<div id="<%= dom_id(message) %>" class="msg">
+  <% if message.user? %>
+    <div class="msg-user">&gt; <%= message.content %></div>
+  <% else %>
+    <div class="msg-assistant">
+      <div id="<%= dom_id(message) %>_body" class="msg-body"><%= assistant_body(message, active_chunk_id: local_assigns[:active_chunk_id]) %></div>
+      <% if (trace = message_trace(message)) %>
+        <div class="msg-trace"><%= trace %></div>
       <% end %>
-    </small>
+    </div>
   <% end %>
 </div>

@@ -1,40 +1,16 @@
 <% content_for :title, @document.title %>
 
 <% if @document.processing? || @document.pending? %>
-  <%# Simple auto-refresh until the job finishes (streaming arrives in Phase 3). %>
+  <%# Simple auto-refresh until ingestion finishes. Only takes effect on a full
+      page load — a Turbo Frame navigation here ignores <head>, which is fine
+      since that path is reached by clicking an already-ready document. %>
   <% content_for :head do %>
     <meta http-equiv="refresh" content="3">
   <% end %>
 <% end %>
 
-<p><%= link_to "← All documents", documents_path %></p>
-
-<h1><%= @document.title %></h1>
-
-<ul>
-  <li><strong>Status:</strong> <%= @document.status %></li>
-  <li><strong>Type:</strong> <%= @document.content_type %></li>
-  <li><strong>Source:</strong> <%= @document.source_uri %></li>
-  <li><strong>Processed at:</strong> <%= @document.processed_at %></li>
-  <li><strong>Chunks:</strong> <%= @document.chunks.count %></li>
-</ul>
-
-<% if @document.failed? %>
-  <p style="color: #b00;"><strong>Error:</strong> <%= @document.error_message %></p>
-<% end %>
-
-<% if @document.chunks.any? %>
-  <h2>Chunk preview</h2>
-  <% @document.chunks.order(:position).limit(5).each do |chunk| %>
-    <div style="border: 1px solid #eee; padding: 0.5rem; margin-bottom: 0.5rem;">
-      <small>
-        #<%= chunk.position %> · <%= chunk.token_count %> tokens ·
-        <%= chunk.embedding_model %> (<%= chunk.embedding_dim %>d) ·
-        embedding present: <%= chunk.embedding.present? %>
-      </small>
-      <p><%= truncate(chunk.content, length: 300) %></p>
-    </div>
+<div class="page">
+  <%= turbo_frame_tag "doc_pane" do %>
+    <%= render "documents/reader", document: @document, chunks: @chunks, active_chunk_id: @active_chunk_id, sim: @sim %>
   <% end %>
-<% end %>
-
-<p><%= button_to "Delete", @document, method: :delete %></p>
+</div>

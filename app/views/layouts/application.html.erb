@@ -18,30 +18,55 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <%# Set the theme before first paint so there's no flash of the wrong theme. %>
+    <script>
+      (function () {
+        var saved = null;
+        try { saved = localStorage.getItem("theme"); } catch (e) {}
+        document.documentElement.dataset.theme = saved === "light" ? "light" : "dark";
+      })();
+    </script>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <header style="padding: 0.5rem 1rem; border-bottom: 1px solid #ddd; display: flex; gap: 1rem; align-items: center;">
-      <%= link_to "Documents", root_path %>
-      <% if current_user %><%= link_to "Usage", dashboard_path %><% end %>
-      <span style="margin-left: auto;">
+    <div class="app-shell">
+      <header class="topbar">
+        <span class="topbar-brand">rag<span class="dot">·</span>assistant</span>
+
         <% if current_user %>
-          <%= current_user.email_address %>
-          <%= button_to "Sign out", session_path, method: :delete, form: { style: "display:inline;" } %>
-        <% else %>
-          <%= link_to "Sign in", new_session_path %>
+          <nav class="topbar-nav">
+            <%= link_to "chat", conversations_path, class: ("is-active" if controller_name == "conversations" || controller_name == "messages") %>
+            <%= link_to "library", documents_path, class: ("is-active" if controller_name == "documents") %>
+            <%= link_to "search", search_path, class: ("is-active" if controller_name == "search") %>
+            <%= link_to "usage", dashboard_path, class: ("is-active" if controller_name == "dashboard") %>
+          </nav>
         <% end %>
-      </span>
-    </header>
 
-    <% if notice %><p style="color: green; padding: 0 1rem;"><%= notice %></p><% end %>
-    <% if alert %><p style="color: #b00; padding: 0 1rem;"><%= alert %></p><% end %>
+        <div class="topbar-right">
+          <button type="button" class="theme-toggle" data-controller="theme" data-action="theme#toggle" data-theme-target="label">☀ light</button>
 
-    <main style="padding: 1rem;">
+          <span class="topbar-user">
+            <% if current_user %>
+              <%= current_user.email_address %>
+              <%= button_to "sign out", session_path, method: :delete, form: { class: "link-button-form" }, class: "link-button" %>
+            <% else %>
+              <%= link_to "sign in", new_session_path %>
+            <% end %>
+          </span>
+        </div>
+      </header>
+
+      <% if notice %><p class="flash flash-notice"><%= notice %></p><% end %>
+      <% if alert %><p class="flash flash-alert"><%= alert %></p><% end %>
+
       <%= yield %>
-    </main>
+    </div>
   </body>
 </html>

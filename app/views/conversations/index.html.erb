@@ -1,19 +1,19 @@
 <% content_for :title, "Chat" %>
-<h1>Chat</h1>
 
-<p><%= link_to "← Documents", documents_path %> · <%= link_to "Search", search_path %></p>
+<div class="page">
+  <div class="page-title">Conversations</div>
+  <div class="page-actions"><%= button_to "+ new conversation", conversations_path, method: :post, class: "btn" %></div>
 
-<%= button_to "New conversation", conversations_path, method: :post %>
-
-<% if @conversations.empty? %>
-  <p style="margin-top: 1rem;">No conversations yet.</p>
-<% else %>
-  <ul style="margin-top: 1rem;">
-    <% @conversations.each do |conversation| %>
-      <li>
-        <%= link_to conversation.title.presence || "Untitled conversation", conversation %>
-        <small style="color: #888;"><%= conversation.created_at.to_fs(:short) %></small>
-      </li>
-    <% end %>
-  </ul>
-<% end %>
+  <% if @conversations.empty? %>
+    <p class="empty-state">No conversations yet — start one above.</p>
+  <% else %>
+    <ul class="list-plain">
+      <% @conversations.each do |conversation| %>
+        <li>
+          <%= link_to conversation.title.presence || "Untitled conversation", conversation %>
+          <span class="meta"><%= conversation.created_at.to_fs(:short) %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
