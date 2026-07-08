@@ -8,6 +8,9 @@ class DocumentsController < ApplicationController
 
   def show
     @document = Current.user.documents.find(params[:id])
+    @chunks = @document.chunks.order(:position)
+    @active_chunk_id = params[:chunk_id].presence
+    @sim = params[:sim].presence&.to_i
   end
 
   def new

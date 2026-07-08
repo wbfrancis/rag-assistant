@@ -1,27 +1,41 @@
 <% content_for :title, "New document" %>
-<h1>New document</h1>
 
-<%= form_with model: @document, local: true, html: { multipart: true } do |f| %>
-  <% if @document.errors.any? %>
-    <ul style="color: #b00;">
-      <% @document.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
-    </ul>
+<div class="page">
+  <%= turbo_frame_tag "doc_pane" do %>
+    <div class="doc-toolbar">
+      <%= link_to "← library", documents_path, class: "doc-back", data: { turbo_frame: "doc_pane" } %>
+      <span class="doc-header">new document</span>
+    </div>
+
+    <div class="doc-scroll">
+      <%= form_with model: @document, local: true, html: { multipart: true } do |f| %>
+        <% if @document.errors.any? %>
+          <ul class="errors">
+            <% @document.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+          </ul>
+        <% end %>
+
+        <div class="field">
+          <%= f.label :title %>
+          <%= f.text_field :title %>
+        </div>
+
+        <fieldset class="fieldset">
+          <legend>Option A — upload a file (.txt, .md, .html, .pdf)</legend>
+          <div class="field">
+            <%= file_field_tag "document[file]", accept: ".txt,.md,.markdown,.html,.htm,.pdf" %>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend>Option B — paste text (Markdown)</legend>
+          <div class="field">
+            <%= text_area_tag "document[body]", nil, rows: 10 %>
+          </div>
+        </fieldset>
+
+        <%= f.submit "Upload & ingest", class: "btn" %>
+      <% end %>
+    </div>
   <% end %>
-
-  <p>
-    <%= f.label :title %><br>
-    <%= f.text_field :title %>
-  </p>
-
-  <fieldset>
-    <legend>Option A — upload a file (.txt, .md, .html, .pdf)</legend>
-    <%= file_field_tag "document[file]", accept: ".txt,.md,.markdown,.html,.htm,.pdf" %>
-  </fieldset>
-
-  <fieldset style="margin-top: 1rem;">
-    <legend>Option B — paste text (Markdown)</legend>
-    <%= text_area_tag "document[body]", nil, rows: 12, cols: 80 %>
-  </fieldset>
-
-  <p><%= f.submit "Upload & ingest" %></p>
-<% end %>
+</div>

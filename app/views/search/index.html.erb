@@ -1,31 +1,30 @@
 <% content_for :title, "Search" %>
-<h1>Search</h1>
 
-<p><%= link_to "← All documents", documents_path %></p>
+<div class="page">
+  <div class="page-title">Search</div>
 
-<%= form_with url: search_path, method: :get do |f| %>
-  <%= f.text_field :q, value: @query, placeholder: "Search your documents…", style: "width: 24rem;" %>
-  <%= f.submit "Search" %>
-<% end %>
+  <%= form_with url: search_path, method: :get, class: "field" do |f| %>
+    <%= f.text_field :q, value: @query, placeholder: "search your documents…" %>
+    <div class="page-actions"><%= f.submit "Search", class: "btn" %></div>
+  <% end %>
 
-<% if @result %>
-  <% if @result.abstained? %>
-    <p style="color: #b00; margin-top: 1rem;">
-      No sufficiently relevant context found for “<%= @query %>”.
-    </p>
-  <% elsif @result.chunks.empty? %>
-    <p style="margin-top: 1rem;">No results.</p>
-  <% else %>
-    <p style="margin-top: 1rem;"><strong><%= pluralize(@result.chunks.size, "result") %></strong> for “<%= @query %>”:</p>
-    <% @result.scored.each do |chunk, similarity| %>
-      <div style="border: 1px solid #eee; padding: 0.5rem; margin-bottom: 0.5rem;">
-        <small>
-          similarity <%= format("%.3f", similarity) %> ·
-          <%= link_to chunk.document.title, document_path(chunk.document) %> ·
-          #<%= chunk.position %>
-        </small>
-        <p><%= truncate(chunk.content, length: 300) %></p>
-      </div>
+  <% if @result %>
+    <% if @result.abstained? %>
+      <p class="errors">No sufficiently relevant context found for “<%= @query %>”.</p>
+    <% elsif @result.chunks.empty? %>
+      <p class="empty-state">No results.</p>
+    <% else %>
+      <p class="page-sub"><strong><%= pluralize(@result.chunks.size, "result") %></strong> for “<%= @query %>”</p>
+      <% @result.scored.each do |chunk, similarity| %>
+        <div class="card result-card">
+          <div class="meta">
+            similarity <%= similarity ? format("%.3f", similarity) : "lexical only" %> ·
+            <%= link_to chunk.document.title, document_path(chunk.document) %> ·
+            #<%= chunk.position %>
+          </div>
+          <p><%= truncate(chunk.content, length: 300) %></p>
+        </div>
+      <% end %>
     <% end %>
   <% end %>
-<% end %>
+</div>

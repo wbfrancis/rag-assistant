@@ -1,25 +1,28 @@
 <% content_for :title, "Sign up" %>
-<h1>Sign up</h1>
 
-<%= form_with model: @user, url: registration_path, method: :post do |f| %>
-  <% if @user.errors.any? %>
-    <ul style="color: #b00;">
-      <% @user.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
-    </ul>
+<div class="page page--narrow">
+  <div class="page-title">Sign up</div>
+
+  <%= form_with model: @user, url: registration_path, method: :post do |f| %>
+    <% if @user.errors.any? %>
+      <ul class="errors">
+        <% @user.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    <% end %>
+    <div class="field">
+      <%= f.label :email_address, "Email" %>
+      <%= f.email_field :email_address, autofocus: true, autocomplete: "username" %>
+    </div>
+    <div class="field">
+      <%= f.label :password %>
+      <%= f.password_field :password, autocomplete: "new-password" %>
+    </div>
+    <div class="field">
+      <%= f.label :password_confirmation, "Confirm password" %>
+      <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
+    </div>
+    <div class="page-actions"><%= f.submit "Sign up", class: "btn" %></div>
   <% end %>
-  <p>
-    <%= f.label :email_address, "Email" %><br>
-    <%= f.email_field :email_address, autofocus: true, autocomplete: "username" %>
-  </p>
-  <p>
-    <%= f.label :password %><br>
-    <%= f.password_field :password, autocomplete: "new-password" %>
-  </p>
-  <p>
-    <%= f.label :password_confirmation, "Confirm password" %><br>
-    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
-  </p>
-  <p><%= f.submit "Sign up" %></p>
-<% end %>
 
-<p>Already have an account? <%= link_to "Sign in", new_session_path %></p>
+  <p class="page-sub">Already have an account? <%= link_to "Sign in", new_session_path %></p>
+</div>

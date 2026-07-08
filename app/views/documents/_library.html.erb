@@ -1,0 +1,34 @@
+<%# The document pane's resting state: every document in the tenant's corpus.
+    Reused standalone (documents#index) and embedded in the conversation's
+    #doc_pane frame — "active_chunk_id" is always nil here, which is what
+    clears any citation chip highlighting in the chat pane once the reader
+    switches back to the library. %>
+<div data-reading-room-target="frame" class="doc-pane-content">
+  <div class="lib-header">
+    <span class="lib-title">LIBRARY — <%= documents.size %> <%= "DOCUMENT".pluralize(documents.size) %></span>
+    <%= link_to "+ upload", new_document_path, class: "lib-upload", data: { turbo_frame: "doc_pane" } %>
+  </div>
+
+  <div class="lib-scroll">
+    <% if documents.empty? %>
+      <p class="empty-state">No documents yet. <%= link_to "Upload one", new_document_path, data: { turbo_frame: "doc_pane" } %>.</p>
+    <% end %>
+
+    <% documents.each do |doc| %>
+      <% clickable = !doc.pending? && !doc.processing? %>
+      <% classes = [ "lib-row", ("lib-row--processing" unless clickable) ].compact.join(" ") %>
+      <% row = capture do %>
+        <span class="lib-row-title"><%= doc.title %></span>
+        <span class="lib-row-type"><%= doc_type_label(doc) %></span>
+        <span class="lib-row-status <%= doc.processed? ? "lib-row-status--ready" : "lib-row-status--other" %>"><%= doc.status %></span>
+        <span class="lib-row-chunks"><%= clickable ? pluralize(doc.chunks.count, "chunk") : "—" %></span>
+      <% end %>
+
+      <% if clickable %>
+        <%= link_to row, document_path(doc), class: classes, data: { turbo_frame: "doc_pane" } %>
+      <% else %>
+        <div class="<%= classes %>"><%= row %></div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
