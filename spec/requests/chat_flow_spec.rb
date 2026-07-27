@@ -59,8 +59,6 @@ RSpec.describe "Chat flow", type: :request do
     end
 
     get conversation_path(conversation)
-    # HTML-escaped: the assistant bubble renders through safe_join, which
-    # (correctly) entity-encodes the apostrophe like any other Rails view.
-    expect(response.body).to include(ERB::Util.html_escape(AnswerGenerator::ABSTAIN_MESSAGE))
+    expect(response.parsed_body.at_css(".msg-body").text).to include(AnswerGenerator::ABSTAIN_MESSAGE)
   end
 end

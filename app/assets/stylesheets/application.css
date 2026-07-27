@@ -69,6 +69,22 @@ button, input, textarea {
 
 .mono { font-family: "IBM Plex Mono", monospace; }
 
+/* Keep native scrolling behavior while removing the detached overlay thumbs
+   that some browsers place on the left edge of nested scroll containers. */
+.app-shell,
+.doc-scroll,
+.lib-scroll,
+.chat-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.app-shell::-webkit-scrollbar,
+.doc-scroll::-webkit-scrollbar,
+.lib-scroll::-webkit-scrollbar,
+.chat-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
 
 /* ---------- app shell / top bar ---------- */
@@ -119,15 +135,61 @@ button, input, textarea {
 }
 
 .theme-toggle {
-  font: 500 10px "IBM Plex Mono", monospace;
-  color: var(--muted);
-  background: none;
+  position: relative;
+  width: 54px;
+  height: 28px;
+  color: var(--faint);
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 3px;
-  padding: 5px 10px;
+  border-radius: 4px;
+  padding: 0;
   cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 1.5%);
 }
-.theme-toggle:hover { color: var(--text); border-color: var(--muted); }
+.theme-toggle:hover { border-color: var(--muted); }
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--tealdim);
+  outline-offset: 2px;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  z-index: 1;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 30%);
+  transition: transform 160ms ease;
+}
+
+.theme-toggle-icon {
+  position: absolute;
+  z-index: 2;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  transition: color 160ms ease;
+}
+.theme-toggle-icon svg { display: block; width: 16px; height: 16px; }
+.theme-toggle-moon { left: 5px; color: var(--bg); }
+.theme-toggle-sun { right: 5px; color: var(--faint); }
+
+.theme-toggle[data-theme-state="light"] .theme-toggle-thumb {
+  transform: translateX(26px);
+}
+.theme-toggle[data-theme-state="light"] .theme-toggle-moon { color: var(--faint); }
+.theme-toggle[data-theme-state="light"] .theme-toggle-sun { color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-thumb,
+  .theme-toggle-icon {
+    transition: none;
+  }
+}
 
 .topbar-user {
   font: 400 10.5px "IBM Plex Mono", monospace;
@@ -554,9 +616,74 @@ button, input, textarea {
   background: var(--card);
 }
 
-.msg-assistant { display: flex; flex-direction: column; gap: 8px; max-width: 94%; }
+.msg-assistant {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(94%, 70ch);
+}
 
-.msg-body { font: 400 13.5px/1.8 Archivo, sans-serif; color: var(--body-text); white-space: pre-wrap; }
+.msg-body {
+  font: 400 13.5px/1.75 Archivo, sans-serif;
+  color: var(--body-text);
+}
+
+.msg-body > :first-child { margin-top: 0; }
+.msg-body > :last-child { margin-bottom: 0; }
+.msg-body p { margin: 0 0 .9em; }
+.msg-body strong { color: var(--text); font-weight: 600; }
+.msg-body em { color: var(--text); }
+.msg-body ol,
+.msg-body ul {
+  margin: .3em 0 1em;
+  padding-left: 1.45em;
+}
+.msg-body li { padding-left: .2em; }
+.msg-body li + li { margin-top: .55em; }
+.msg-body li > p { margin-bottom: .45em; }
+.msg-body h2,
+.msg-body h3,
+.msg-body h4 {
+  color: var(--text);
+  font: 600 13.5px/1.5 Archivo, sans-serif;
+  margin: 1.1em 0 .45em;
+}
+.msg-body blockquote {
+  margin: .8em 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--tealdim);
+  color: var(--muted);
+}
+.msg-body code {
+  font: 400 .9em "IBM Plex Mono", monospace;
+  color: var(--hltext);
+  background: var(--hlbg);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.msg-body pre {
+  overflow-x: auto;
+  margin: .8em 0 1em;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--card);
+}
+.msg-body pre code { padding: 0; background: none; }
+
+.msg-sources {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+.msg-sources-label {
+  margin-right: 3px;
+  font: 500 9px "IBM Plex Mono", monospace;
+  color: var(--faint);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
 
 .msg-typing {
   font: 500 12px "IBM Plex Mono", monospace;

@@ -1,13 +1,27 @@
+require "commonmarker"
+require "securerandom"
+
 module MessagesHelper
   CITATION_PATTERN = /\[(\d+)\]/
+  MARKDOWN_TAGS = %w[p br strong em ol ul li code pre blockquote h2 h3 h4 hr].freeze
+  CITATION_TAGS = (MARKDOWN_TAGS + %w[a]).freeze
+  CITATION_ATTRIBUTES = %w[
+    href class data-turbo-frame data-reading-room-target data-chunk-id
+  ].freeze
 
   # The assistant bubble's body: a typing indicator while the answer is still
-  # streaming in (content blank), otherwise the answer text with any inline
-  # "[n]" markers turned into clickable citation chips.
+  # streaming in (content blank), otherwise sanitized CommonMark with inline
+  # "[n]" markers turned into application-generated citation chips.
   def assistant_body(message, active_chunk_id: nil)
     return typing_indicator if message.content.blank?
 
-    safe_join(citation_segments(message, active_chunk_id))
+    rendered, used = render_markdown_with_citations(message, active_chunk_id)
+    return rendered if used.present? || message.citations.blank?
+
+    # Older/model-noncompliant answers can omit every inline marker. Keep their
+    # sources reachable, but separate them from the prose instead of making a
+    # pile of chips look like it supports the final sentence.
+    safe_join([ rendered, fallback_sources(message, active_chunk_id) ])
   end
 
   # One line of retrieval/generation transparency under a finished answer:
@@ -27,38 +41,51 @@ module MessagesHelper
     end
   end
 
-  # Splits the answer into plain text and citation-chip segments. The model is
-  # asked (AnswerGenerator::SYSTEM_PROMPT) to cite inline as "[n]", using the
-  # same numbering as `message.citations`. Any citation it never mentions
-  # inline — or a backend that never emits bracket markers at all — is
-  # appended as a trailing chip, so a source is never silently dropped.
-  def citation_segments(message, active_chunk_id)
+  # Replace valid source markers with inert tokens before parsing Markdown. The
+  # first sanitization removes model-authored HTML and links; after inserting
+  # our own citation links, the second sanitization allows only their exact
+  # attributes.
+  def render_markdown_with_citations(message, active_chunk_id)
     citations = message.citations || []
     used = []
-    segments = []
+    token_prefix = "RAGCITATION#{SecureRandom.hex(8).upcase}"
+    token_pattern = /#{Regexp.escape(token_prefix)}(\d+)TOKEN/
 
-    message.content.split(CITATION_PATTERN).each_with_index do |part, i|
-      if i.odd?
-        citation = citations[part.to_i - 1]
-        if citation
-          used << part.to_i - 1
-          segments << citation_chip(message, citation, part.to_i, active_chunk_id)
-        else
-          segments << "[#{part}]"
-        end
-      elsif part.present?
-        segments << part
-      end
+    markdown = message.content.gsub(CITATION_PATTERN) do |marker|
+      index = Regexp.last_match(1).to_i - 1
+      next marker unless citations[index]
+
+      used << index
+      "#{token_prefix}#{index}TOKEN"
     end
 
-    citations.each_with_index do |citation, i|
-      next if used.include?(i)
-
-      segments << " " if segments.present?
-      segments << citation_chip(message, citation, i + 1, active_chunk_id)
+    html = Commonmarker.to_html(
+      markdown.encode(Encoding::UTF_8),
+      options: { render: { unsafe: false } }
+    )
+    clean_html = sanitize(html, tags: MARKDOWN_TAGS, attributes: [])
+    with_chips = clean_html.gsub(token_pattern) do
+      index = Regexp.last_match(1).to_i
+      citation_chip(message, citations.fetch(index), index + 1, active_chunk_id).to_s
     end
 
-    segments
+    [
+      sanitize(with_chips, tags: CITATION_TAGS, attributes: CITATION_ATTRIBUTES),
+      used.uniq
+    ]
+  end
+
+  def fallback_sources(message, active_chunk_id)
+    chips = message.citations.each_with_index.map do |citation, index|
+      citation_chip(message, citation, index + 1, active_chunk_id)
+    end
+
+    content_tag(:div, class: "msg-sources") do
+      safe_join([
+        content_tag(:span, "sources", class: "msg-sources-label"),
+        safe_join(chips, " ")
+      ])
+    end
   end
 
   def citation_chip(message, citation, n, active_chunk_id)

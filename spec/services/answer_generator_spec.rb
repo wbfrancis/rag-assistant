@@ -31,9 +31,13 @@ RSpec.describe AnswerGenerator do
                                    retrieval: result_for([ [ chunk, 0.9 ] ])).call
 
       user_content = captured.last[:content]
+      system_content = captured.first[:content]
       expect(user_content).to include("The sky is blue.")
       expect(user_content).to include("What colour is the sky?")
       expect(user_content).to match(/untrusted/i)
+      expect(system_content).to include("specific system")
+      expect(system_content).to include("Never collect citations at the end")
+      expect(system_content).to include("security, privacy, accuracy, or quality-control")
 
       expect(answer).to eq("Blue.")
       message.reload
