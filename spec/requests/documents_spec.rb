@@ -18,7 +18,19 @@ RSpec.describe "Documents", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Mine")
+      expect(response.body).to include("LIBRARY — 1 DOCUMENT")
       expect(mine).to be_persisted
+    end
+
+    it "uses an uppercase plural document label" do
+      user = create(:user)
+      create_list(:document, 2, tenant: user)
+      sign_in(user)
+
+      get documents_path
+
+      expect(response.body).to include("LIBRARY — 2 DOCUMENTS")
+      expect(response.body).not_to include("DOCUMENTs")
     end
   end
 

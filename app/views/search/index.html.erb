@@ -2,9 +2,24 @@
 
 <div class="page">
   <div class="page-title">Search</div>
+  <p class="search-intro">
+    Search shows the passages the assistant could use before it writes an answer. Use it to
+    check whether the collection contains relevant evidence and which documents supplied it.
+  </p>
+
+  <div class="search-guide card">
+    <div>
+      <strong>Works well</strong>
+      <span>Specific concepts, phrases, and questions about material in your documents.</span>
+    </div>
+    <div>
+      <strong>Does not</strong>
+      <span>Generate an answer, summarize an entire document, or search outside your collection.</span>
+    </div>
+  </div>
 
   <%= form_with url: search_path, method: :get, class: "field" do |f| %>
-    <%= f.text_field :q, value: @query, placeholder: "search your documents…" %>
+    <%= f.text_field :q, value: @query, placeholder: "Search your documents…" %>
     <div class="page-actions"><%= f.submit "Search", class: "btn" %></div>
   <% end %>
 

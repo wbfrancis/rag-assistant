@@ -5,7 +5,7 @@
     switches back to the library. %>
 <div data-reading-room-target="frame" class="doc-pane-content">
   <div class="lib-header">
-    <span class="lib-title">LIBRARY — <%= documents.size %> <%= "DOCUMENT".pluralize(documents.size) %></span>
+    <span class="lib-title">LIBRARY — <%= documents.size %> <%= documents.one? ? "DOCUMENT" : "DOCUMENTS" %></span>
     <% unless demo_session? %>
       <%= link_to "+ upload", new_document_path, class: "lib-upload", data: { turbo_frame: "doc_pane" } %>
     <% end %>

@@ -23,6 +23,20 @@ RSpec.describe "Conversations", type: :request do
       expect(response.body).not_to include("Theirs")
       expect(mine).to be_present
     end
+
+    it "places chat before the document pane and renders the composer controls" do
+      user = create(:user)
+      conversation = create(:conversation, tenant: user)
+      sign_in(user)
+
+      get conversation_path(conversation)
+
+      panes = response.parsed_body.css(".rr > .rr-pane")
+      expect(panes.first["class"]).to include("rr-chat-pane")
+      expect(panes[1]["class"]).to include("rr-doc-pane")
+      expect(response.body).to include("Ask about your documents...")
+      expect(response.parsed_body.at_css(".composer-send").text).to eq("send")
+    end
   end
 
   describe "POST /conversations" do

@@ -14,6 +14,20 @@ RSpec.describe "Portfolio demo", type: :request do
 
   let!(:demo_user) { create(:user, email_address: "demo@example.com") }
 
+  it "describes the assistant and demo composer with the approved copy" do
+    get root_path
+
+    expect(response.parsed_body.text).to include(
+      "This LLM-powered assistant retrieves relevant passages from a collection of documents"
+    )
+
+    post demo_session_path
+    post conversations_path
+    get conversation_path(demo_user.conversations.order(:created_at).last)
+
+    expect(response.body).to include("Ask how this assistant works...")
+  end
+
   it "starts without a password and shows only conversations from this demo session" do
     previous = create(:conversation, tenant: demo_user, title: "Another visitor")
 

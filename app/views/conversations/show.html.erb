@@ -6,6 +6,27 @@
 
 <div class="rr" data-controller="reading-room" data-action="turbo:frame-load->reading-room#sync">
 
+  <section class="rr-pane rr-chat-pane" data-controller="chat" data-screen-label="Chat pane">
+    <div class="chat-scroll" id="messages" data-chat-target="list">
+      <%= render partial: "messages/message", collection: @messages, locals: { active_chunk_id: @active_chunk_id } %>
+    </div>
+
+    <div class="composer-wrap">
+      <%= form_with model: [ @conversation, @message ],
+                    data: { action: "turbo:submit-start->chat#start turbo:submit-end->chat#reset" } do |f| %>
+        <div class="composer">
+          <span class="composer-prompt">&gt;</span>
+          <%= f.text_field :content, placeholder: demo_session? ? "Ask how this assistant works..." : "Ask about your documents...",
+                            autocomplete: "off", data: { chat_target: "input" } %>
+          <%= f.button "send", type: "submit", class: "composer-send", data: { chat_target: "send" } %>
+        </div>
+      <% end %>
+      <div class="composer-hint">
+        answers are grounded in <%= demo_session? ? "the curated collection" : "your documents" %> · below relevance floor <%= format("%.2f", Retriever::RELEVANCE_FLOOR) %> the assistant abstains
+      </div>
+    </div>
+  </section>
+
   <section class="rr-pane rr-doc-pane" data-screen-label="Document pane">
     <%# The "frame" Stimulus target lives on the inner div the reader/library
         partials render (documents/_reader, documents/_library) rather than on
@@ -19,27 +40,6 @@
         <%= render "documents/library", documents: @documents %>
       <% end %>
     <% end %>
-  </section>
-
-  <section class="rr-pane rr-chat-pane" data-controller="chat" data-screen-label="Chat pane">
-    <div class="chat-scroll" id="messages" data-chat-target="list">
-      <%= render partial: "messages/message", collection: @messages, locals: { active_chunk_id: @active_chunk_id } %>
-    </div>
-
-    <div class="composer-wrap">
-      <%= form_with model: [ @conversation, @message ],
-                    data: { action: "turbo:submit-end->chat#reset" } do |f| %>
-        <div class="composer">
-          <span class="composer-prompt">&gt;</span>
-          <%= f.text_field :content, placeholder: demo_session? ? "ask how this assistant works…" : "ask about your documents…",
-                            autocomplete: "off", data: { chat_target: "input" } %>
-          <%= f.submit "send", class: "composer-send" %>
-        </div>
-      <% end %>
-      <div class="composer-hint">
-        answers are grounded in <%= demo_session? ? "the curated collection" : "your documents" %> · below relevance floor <%= format("%.2f", Retriever::RELEVANCE_FLOOR) %> the assistant abstains
-      </div>
-    </div>
   </section>
 
 </div>

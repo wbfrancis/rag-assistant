@@ -11,6 +11,18 @@ RSpec.describe "Search", type: :request do
   end
 
   describe "GET /search" do
+    it "explains what search can and cannot do" do
+      user = create(:user)
+      sign_in(user)
+
+      get search_path
+
+      expect(response.body).to include("Search shows the passages the assistant could use")
+      expect(response.body).to include("Works well")
+      expect(response.body).to include("Does not")
+      expect(response.body).to include("search outside your collection")
+    end
+
     it "shows ranked results from the user's own chunks with similarity" do
       user = create(:user)
       doc = create(:document, tenant: user, title: "My Doc")

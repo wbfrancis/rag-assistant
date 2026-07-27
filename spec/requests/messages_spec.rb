@@ -21,6 +21,8 @@ RSpec.describe "Messages", type: :request do
       expect(conversation.messages.assistant.last).to be_present
       expect(conversation.reload.title).to eq("What is in my docs?") # derived from first question
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("What is in my docs?")
+      expect(response.body).to include("msg-typing")
     end
 
     it "rejects a blank question without enqueuing a job" do
