@@ -69,7 +69,7 @@ gem "neighbor", "~> 1.2"
 
 # Accurate token counts (cl100k_base) for the chunker, matching the OpenAI
 # embedding tokenizer instead of a chars/4 heuristic.
-gem "tiktoken_ruby", "~> 0.0.9"
+gem "tiktoken_ruby", "~> 0.0.17"
 
 # Extracts text from uploaded PDFs in TextExtractor.
 gem "pdf-reader", "~> 2.12"
