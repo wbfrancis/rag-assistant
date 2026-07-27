@@ -2,11 +2,11 @@ class ConversationsController < ApplicationController
   # Every query goes through Current.user.conversations, so a user can only ever
   # reach their own conversations (tenant isolation, like DocumentsController).
   def index
-    @conversations = Current.user.conversations.order(created_at: :desc)
+    @conversations = accessible_conversations.order(created_at: :desc)
   end
 
   def show
-    @conversation = Current.user.conversations.find(params[:id])
+    @conversation = accessible_conversations.find(params[:id])
     @messages = @conversation.messages
     @message = @conversation.messages.new
     set_doc_pane_state
@@ -14,6 +14,7 @@ class ConversationsController < ApplicationController
 
   def create
     @conversation = Current.user.conversations.create!
+    remember_demo_conversation(@conversation)
     redirect_to @conversation
   end
 

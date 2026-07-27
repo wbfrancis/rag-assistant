@@ -15,5 +15,7 @@
     <div class="page-actions"><%= f.submit "Sign in", class: "btn" %></div>
   <% end %>
 
-  <p class="page-sub">No account? <%= link_to "Sign up", new_registration_path %></p>
+  <% unless DemoAccess.enabled? %>
+    <p class="page-sub">No account? <%= link_to "Sign up", new_registration_path %></p>
+  <% end %>
 </div>

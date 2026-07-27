@@ -6,12 +6,16 @@
 <div data-reading-room-target="frame" class="doc-pane-content">
   <div class="lib-header">
     <span class="lib-title">LIBRARY — <%= documents.size %> <%= "DOCUMENT".pluralize(documents.size) %></span>
-    <%= link_to "+ upload", new_document_path, class: "lib-upload", data: { turbo_frame: "doc_pane" } %>
+    <% unless demo_session? %>
+      <%= link_to "+ upload", new_document_path, class: "lib-upload", data: { turbo_frame: "doc_pane" } %>
+    <% end %>
   </div>
 
   <div class="lib-scroll">
     <% if documents.empty? %>
-      <p class="empty-state">No documents yet. <%= link_to "Upload one", new_document_path, data: { turbo_frame: "doc_pane" } %>.</p>
+      <p class="empty-state">
+        No documents yet.<% unless demo_session? %> <%= link_to "Upload one", new_document_path, data: { turbo_frame: "doc_pane" } %>.<% end %>
+      </p>
     <% end %>
 
     <% documents.each do |doc| %>

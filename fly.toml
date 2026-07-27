@@ -15,6 +15,12 @@ console_command = '/rails/bin/rails console'
 [env]
   HTTP_PORT = '8080'
   RAILS_ENV = 'production'
+  APP_HOST = 'assistant.willbfrancis.com'
+  DEMO_MODE = 'true'
+  DEMO_USER_EMAIL = 'demo@willbfrancis.com'
+  DEMO_SESSION_QUESTION_LIMIT = '12'
+  DEMO_DAILY_QUESTION_LIMIT = '250'
+  RAILS_FORCE_SSL = 'true'
   SOLID_QUEUE_IN_PUMA = 'true'
   WEB_CONCURRENCY = '1'
 

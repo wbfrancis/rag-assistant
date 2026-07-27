@@ -47,8 +47,10 @@
     <% if document.failed? && document.error_message.present? %>
       <span class="error">Error: <%= document.error_message %></span>
     <% end %>
-    <div class="doc-delete">
-      <%= button_to "delete document", document, method: :delete, form: { data: { turbo_confirm: "Delete “#{document.title}”?" } }, class: "btn btn-danger" %>
-    </div>
+    <% unless demo_session? %>
+      <div class="doc-delete">
+        <%= button_to "delete document", document, method: :delete, form: { data: { turbo_confirm: "Delete “#{document.title}”?" } }, class: "btn btn-danger" %>
+      </div>
+    <% end %>
   </div>
 </div>

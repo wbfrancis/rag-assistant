@@ -1,4 +1,6 @@
 class DashboardController < ApplicationController
+  before_action :prevent_demo_access
+
   # Per-tenant usage view. Everything is
   # scoped through Current.user's conversations, so one tenant can never see
   # another's tokens or cost — the same isolation posture as the rest of the app.
@@ -18,5 +20,13 @@ class DashboardController < ApplicationController
     @total_cost = messages.pluck(:model, :prompt_tokens, :completion_tokens).filter_map do |model, prompt, completion|
       LlmPricing.cost_for(model: model, prompt_tokens: prompt, completion_tokens: completion)
     end.sum
+  end
+
+  private
+
+  def prevent_demo_access
+    return unless demo_session?
+
+    redirect_to conversations_path, alert: "Usage details are not part of the public demo." and return
   end
 end

@@ -1,4 +1,6 @@
 class DocumentsController < ApplicationController
+  before_action :prevent_demo_changes, only: %i[new create destroy]
+
   # Every query goes through Current.user.documents, so a user can never reach
   # another tenant's rows (a foreign id simply raises RecordNotFound -> 404).
 
@@ -66,5 +68,11 @@ class DocumentsController < ApplicationController
     when ".html", ".htm" then "text/html"
     else "text/plain"
     end
+  end
+
+  def prevent_demo_changes
+    return unless demo_session?
+
+    redirect_to documents_path, alert: "The public demo uses a fixed document collection." and return
   end
 end

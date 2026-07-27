@@ -2,6 +2,12 @@
 
 <div class="page">
   <div class="page-title">Conversations</div>
+  <% if demo_session? %>
+    <p class="page-sub">
+      Ask about retrieval, evaluation, citations, architecture, or deployment.
+      Conversations are visible only in this browser session.
+    </p>
+  <% end %>
   <div class="page-actions"><%= button_to "+ new conversation", conversations_path, method: :post, class: "btn" %></div>
 
   <% if @conversations.empty? %>

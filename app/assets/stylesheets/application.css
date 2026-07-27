@@ -166,6 +166,63 @@ button, input, textarea {
 }
 
 .page--narrow { max-width: 360px; }
+.page--home { max-width: 720px; padding-top: 64px; }
+
+.home-kicker {
+  font: 600 10px "IBM Plex Mono", monospace;
+  letter-spacing: .14em;
+  color: var(--teal);
+  margin-bottom: 14px;
+}
+
+.home-title {
+  font: 600 clamp(30px, 6vw, 52px)/1.05 Archivo, sans-serif;
+  letter-spacing: -.035em;
+  margin: 0;
+  max-width: 12ch;
+}
+
+.home-lede {
+  color: var(--body-text);
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: 58ch;
+  margin: 24px 0 32px;
+}
+
+.home-panel {
+  padding: 24px;
+}
+
+.home-panel p {
+  color: var(--body-text);
+}
+
+.home-prompts {
+  margin: 0 0 24px;
+}
+
+.home-prompts li {
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--muted);
+  padding: 7px 0 7px 18px;
+  position: relative;
+}
+
+.home-prompts li::before {
+  content: ">";
+  color: var(--teal);
+  position: absolute;
+  left: 0;
+}
+
+.home-links {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  font: 500 10.5px "IBM Plex Mono", monospace;
+  color: var(--faint);
+}
 
 .page-title {
   font: 600 18px Archivo, sans-serif;

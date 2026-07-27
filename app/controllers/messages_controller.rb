@@ -5,11 +5,17 @@ class MessagesController < ApplicationController
   # question, creates a blank assistant placeholder to stream into, and hands the
   # slow work to GenerateAnswerJob.
   def create
-    conversation = Current.user.conversations.find(params[:conversation_id])
+    conversation = accessible_conversations.find(params[:conversation_id])
     question = message_params[:content].to_s.strip
 
     if question.blank?
       redirect_to conversation, alert: "Please enter a question." and return
+    end
+
+    if demo_session? && !DemoAccess.question_allowed?(
+      user: Current.user, conversation_ids: demo_conversation_ids
+    )
+      redirect_to conversation, alert: "This demo has reached its question limit. Please try again later." and return
     end
 
     @conversation = conversation

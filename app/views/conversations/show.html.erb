@@ -31,13 +31,13 @@
                     data: { action: "turbo:submit-end->chat#reset" } do |f| %>
         <div class="composer">
           <span class="composer-prompt">&gt;</span>
-          <%= f.text_field :content, placeholder: "ask about your documents…",
+          <%= f.text_field :content, placeholder: demo_session? ? "ask how this assistant works…" : "ask about your documents…",
                             autocomplete: "off", data: { chat_target: "input" } %>
           <%= f.submit "send", class: "composer-send" %>
         </div>
       <% end %>
       <div class="composer-hint">
-        answers are grounded in your documents · below relevance floor <%= format("%.2f", Retriever::RELEVANCE_FLOOR) %> the assistant abstains
+        answers are grounded in <%= demo_session? ? "the curated collection" : "your documents" %> · below relevance floor <%= format("%.2f", Retriever::RELEVANCE_FLOOR) %> the assistant abstains
       </div>
     </div>
   </section>

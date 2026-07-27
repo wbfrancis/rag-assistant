@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Rag Assistant" %></title>
+    <title><%= content_for(:title) || "RAG Assistant — Will Francis" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Rag Assistant">
+    <meta name="application-name" content="RAG Assistant">
+    <meta name="description" content="A citation-grounded document assistant by Will Francis.">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -38,14 +39,16 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <span class="topbar-brand">rag<span class="dot">·</span>assistant</span>
+        <%= link_to root_path, class: "topbar-brand" do %>rag<span class="dot">·</span>assistant<% end %>
 
         <% if current_user %>
           <nav class="topbar-nav">
             <%= link_to "chat", conversations_path, class: ("is-active" if controller_name == "conversations" || controller_name == "messages") %>
             <%= link_to "library", documents_path, class: ("is-active" if controller_name == "documents") %>
             <%= link_to "search", search_path, class: ("is-active" if controller_name == "search") %>
-            <%= link_to "usage", dashboard_path, class: ("is-active" if controller_name == "dashboard") %>
+            <% unless demo_session? %>
+              <%= link_to "usage", dashboard_path, class: ("is-active" if controller_name == "dashboard") %>
+            <% end %>
           </nav>
         <% end %>
 
@@ -54,8 +57,8 @@
 
           <span class="topbar-user">
             <% if current_user %>
-              <%= current_user.email_address %>
-              <%= button_to "sign out", session_path, method: :delete, form: { class: "link-button-form" }, class: "link-button" %>
+              <% unless demo_session? %><%= current_user.email_address %><% end %>
+              <%= button_to demo_session? ? "end demo" : "sign out", session_path, method: :delete, form: { class: "link-button-form" }, class: "link-button" %>
             <% else %>
               <%= link_to "sign in", new_session_path %>
             <% end %>

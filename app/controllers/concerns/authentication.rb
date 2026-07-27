@@ -6,7 +6,7 @@ module Authentication
 
   included do
     before_action :require_authentication
-    helper_method :current_user
+    helper_method :current_user, :demo_session?
   end
 
   class_methods do
@@ -34,6 +34,31 @@ module Authentication
     Current.user = user
     reset_session
     session[:user_id] = user.id
+  end
+
+  def start_demo_session_for(user)
+    start_new_session_for(user)
+    session[:demo_mode] = true
+    session[:demo_conversation_ids] = []
+  end
+
+  def demo_session?
+    session[:demo_mode] == true && current_user.present?
+  end
+
+  def demo_conversation_ids
+    Array(session[:demo_conversation_ids])
+  end
+
+  def accessible_conversations
+    scope = Current.user.conversations
+    demo_session? ? scope.where(id: demo_conversation_ids) : scope
+  end
+
+  def remember_demo_conversation(conversation)
+    return unless demo_session?
+
+    session[:demo_conversation_ids] = (demo_conversation_ids + [ conversation.id ]).uniq
   end
 
   def terminate_session

@@ -1,0 +1,39 @@
+<% content_for :title, "RAG Assistant — Will Francis" %>
+
+<div class="page page--home">
+  <div class="home-kicker">PORTFOLIO DEMONSTRATION</div>
+  <h1 class="home-title">Ask the system how it works.</h1>
+  <p class="home-lede">
+    This assistant retrieves relevant passages before answering, cites the material it used,
+    and abstains when the collection does not support an answer.
+  </p>
+
+  <div class="card home-panel">
+    <div class="section-title">The collection</div>
+    <p>
+      The public demo reads a fixed set of documents about its own architecture, retrieval
+      strategy, evaluation harness, citations, and deployment. Public uploads are disabled.
+    </p>
+
+    <div class="section-title">Questions to try</div>
+    <ul class="list-plain home-prompts">
+      <li>How does hybrid retrieval work in this project?</li>
+      <li>Why does the assistant sometimes refuse to answer?</li>
+      <li>How are citations kept valid after documents change?</li>
+    </ul>
+
+    <% if current_user %>
+      <%= link_to "continue to conversations →", conversations_path, class: "btn" %>
+    <% elsif @demo_available %>
+      <%= button_to "start the demo →", demo_session_path, method: :post, class: "btn" %>
+    <% else %>
+      <p class="errors">The curated corpus has not been prepared yet.</p>
+    <% end %>
+  </div>
+
+  <p class="home-links">
+    <a href="https://github.com/wbfrancis/rag-assistant">source and technical notes</a>
+    <span>·</span>
+    <a href="https://willbfrancis.com/">willbfrancis.com</a>
+  </p>
+</div>

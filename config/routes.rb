@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   resource :session, only: %i[new create destroy]
+  resource :demo_session, only: :create
   resource :registration, only: %i[new create]
   resources :documents
   get "search", to: "search#index"
@@ -18,6 +19,5 @@ Rails.application.routes.draw do
     resources :messages, only: %i[create]
   end
 
-  # Defines the root path route ("/")
-  root "documents#index"
+  root "home#show"
 end
