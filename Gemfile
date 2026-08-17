@@ -72,7 +72,7 @@ gem "neighbor", "~> 1.2"
 gem "tiktoken_ruby", "~> 0.0.9"
 
 # Extracts text from uploaded PDFs in TextExtractor.
-gem "pdf-reader", "~> 2.12"
+gem "pdf-reader", "~> 2.16"
 
 # Renders model-authored Markdown as structured, sanitized answer HTML.
 gem "commonmarker", "~> 2.9"
