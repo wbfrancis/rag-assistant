@@ -24,9 +24,13 @@
     </ul>
 
     <% if current_user %>
-      <%= link_to "continue to conversations →", conversations_path, class: "btn" %>
+      <div class="home-chat-action">
+        <%= link_to "start chat", conversations_path, class: "btn" %>
+      </div>
     <% elsif @demo_available %>
-      <%= button_to "start the demo →", demo_session_path, method: :post, class: "btn" %>
+      <div class="home-chat-action">
+        <%= button_to "start chat", demo_session_path, method: :post, class: "btn" %>
+      </div>
     <% else %>
       <p class="errors">The curated corpus has not been prepared yet.</p>
     <% end %>

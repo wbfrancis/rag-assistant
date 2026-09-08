@@ -278,6 +278,10 @@ button, input, textarea {
   left: .1em;
 }
 
+.home-chat-action {
+  padding-top: 12px;
+}
+
 .home-links {
   display: flex;
   gap: 10px;

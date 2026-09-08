@@ -6,11 +6,44 @@ pgvector store. Users then ask questions and receive answers **grounded in the r
 source chunks**, streamed token-by-token over Hotwire/Turbo, with **citations** linking each
 answer back to the chunks that produced it.
 
+**[Try the live demo](https://assistant.willbfrancis.com/)** · [Evaluation results](#retrieval-quality) · [Run locally](#getting-started)
+
+![A live answer with inline citations and its highlighted source passage](docs/images/cited-answer.png)
+
+## Try it
+
+Open the demo, start a chat, and ask a question about the project documentation:
+
+> How does hybrid retrieval work in this project?
+
+Follow a citation to inspect the supporting source. The demo uses a prepared corpus;
+local setup supports document upload and ingestion.
+
+## Engineering highlights
+
+- **Hybrid retrieval:** PostgreSQL vector and full-text search combine through Reciprocal Rank Fusion, without a separate search service.
+- **Tenant isolation:** retrieval and conversation access use the authenticated tenant, with regression tests for cross-tenant access.
+- **Durable citations:** messages preserve source snapshots so later document changes do not break historical answers.
+- **Measured tradeoffs:** on the curated evaluation set, hybrid retrieval improved MRR from **0.95 to 1.00** across 10 answerable questions. Three additional questions test abstention. This small fixture set is a regression benchmark, not a general accuracy claim; [full results and limits](#retrieval-quality) are below.
+
 ## Architecture
 
-The architecture diagram is an Excalidraw file — open
-[`docs/architecture.excalidraw`](../../docs/architecture.excalidraw) in Nimbalyst (or
-[excalidraw.com](https://excalidraw.com)) to view it.
+```mermaid
+flowchart LR
+  subgraph Ingestion
+    Upload[Document upload] --> Job[Solid Queue ingestion job]
+    Job --> Extract[Extract and chunk]
+    Extract --> Embed[OpenAI embeddings]
+    Embed --> DB[(PostgreSQL + pgvector)]
+  end
+  subgraph Answering
+    Question[Question] --> Context[Contextualize question]
+    Context --> Retrieve[Tenant-scoped dense + lexical retrieval]
+    DB --> Retrieve
+    Retrieve --> Generate[Generate answer with source context]
+    Generate --> Stream[Turbo stream + durable citations]
+  end
+```
 
 The system is deliberately **two subsystems**, kept cleanly separated:
 
@@ -62,7 +95,7 @@ and per-message token counts / latency.
 
 - **Multi-tenancy is a committed property, not optional.** Retrieval, document listing, and
   conversation access are all structurally scoped to the authenticated tenant (`Chunk.for_tenant`
-  / `Current.user`), so a forgotten `where` cannot leak cross-tenant data. Cross-tenant retrieval
+  / `Current.user`), and covered by regression tests. Cross-tenant retrieval
   is treated as a security bug with a regression test.
 - **Prompt injection** — uploaded documents are attacker-controlled text. `AnswerGenerator`
   delimits retrieved context, labels it as untrusted reference data, and keeps the system
@@ -86,7 +119,7 @@ and per-message token counts / latency.
 
 ## Getting started
 
-> **Toolchain note.** Ruby 4.0.5 is managed via **mise** (see `.tool-versions`). Run commands
+> **Toolchain note.** The project uses Ruby 4.0.5 (see `.ruby-version`); **mise** can manage it. Run commands
 > in a login shell so the right Ruby is on `PATH` — e.g. `zsh -lic '…'`. A plain shell may fall
 > back to system Ruby and bundler errors.
 
@@ -142,6 +175,8 @@ it can gate CI.
 
 ## Retrieval quality
 
+The checked-in fixture set has **10 answerable questions** (including three buried-identifier cases) and **three out-of-corpus questions**. The harness calls its any-gold-match metric `recall@k`; its definition is **hit@k**, not the fraction of all relevant chunks retrieved. These are previously recorded results, not a new benchmark run.
+
 **Hybrid search lifts MRR from 0.95 → 1.00 overall and 0.83 → 1.00 on the hard subset, with
 recall and abstention unchanged** — the headline result, reproducible from the eval harness.
 The same harness was used to *decide against* shipping LLM re-rank on by default.
@@ -151,7 +186,7 @@ Measured with `bin/rails eval:retrieval` (real key, `text-embedding-3-small`, `k
 identifier (an error code, a bulletin number, a part number) mentioned once inside a long
 ops-manual chunk, out-ranked under dense by a short on-topic page that lacks the identifier.
 
-| Retrieval | recall@8 | MRR (all) | abstention | buried-id subset MRR |
+| Retrieval | Hit@8 (reported as recall@8) | MRR (all) | abstention | buried-id subset MRR |
 | --- | --- | --- | --- | --- |
 | dense (`HYBRID=false`) | 1.00 | 0.95 | 0.33 | 0.83 |
 | **hybrid** (default) | 1.00 | **1.00** | 0.33 | **1.00** |
@@ -174,8 +209,10 @@ Two honest reads of this table, both deliberate:
   Its two-stage value is real on large, poorly-ordered candidate pools; this corpus isn't that,
   and a single `RERANK=true` flips it on where it is. See [ADR 0008](docs/adr/0008-reranking.md).
 
+The optional judge compares generated answers with reference answers; it does not inspect source chunks and is not a direct source-faithfulness audit.
+
 The abstention figure (0.33) is the *retrieval-floor* layer only (judge off): two of the three
-out-of-corpus questions are on-topic near-misses that clear the floor and are caught by the
+out-of-corpus questions are on-topic near-misses that clear the floor and need evaluation of the
 second, generation-layer guardrail (`rake eval JUDGE=true`) — see [ADR 0005](docs/adr/0005-evaluation-harness.md).
 It is identical for dense and hybrid, confirming fusion preserves the abstention contract.
 
@@ -203,9 +240,7 @@ It is identical for dense and hybrid, confirming fusion preserves the abstention
 
 Deploys to **Fly.io** (reusing the repo `Dockerfile`) with a managed pgvector Postgres.
 The web machine runs Solid Queue **inside Puma** (`SOLID_QUEUE_IN_PUMA=true` in
-`fly.toml`), so one process serves both web and background jobs. Full
-step-by-step runbook — database + secrets + first deploy — is in
-`docs/DEPLOY.md`.
+`fly.toml`), so one process serves both web and background jobs. Deployment settings are in [`fly.toml`](fly.toml) and the [`Dockerfile`](Dockerfile).
 
 ## Project layout
 
